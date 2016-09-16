@@ -77,7 +77,7 @@ export function createGraphQLSchema(collections: Tyr.TyranidCollectionList) {
 
   collections.forEach(col => {
     const name = col.def.name;
-    if (!col.def.fields) return;
+    if (!col.def.fields) throw new TypeError(`Collection "${name}" has no fields!`);
 
     const fields = createFieldThunk(col.def.fields, typeMap, `${name}_`);
 
@@ -192,11 +192,14 @@ export function createFieldThunk(
   return function() {
     const fieldsObj: GraphQLFieldConfigMap = {};
 
-    if (!fields) return fieldsObj;
+    if (!fields) throw new TypeError(`No fields given to createFieldThunk!`);
 
     for (const fieldName in fields) {
       const field = fields[fieldName];
-      fieldsObj[fieldName] = createGraphQLFieldConfig(field, map, fieldName, `${path}${fieldName}`);
+      const fieldConfig = createGraphQLFieldConfig(field, map, fieldName, `${path}${fieldName}`);
+      if (fieldConfig) {
+        fieldsObj[fieldName] = fieldConfig;
+      }
     }
 
     return fieldsObj;
@@ -217,7 +220,7 @@ export function createGraphQLFieldConfig(
   map: GraphQLOutputTypeMap,
   fieldName: string,
   path: string
-): GraphQLFieldConfig {
+): GraphQLFieldConfig | undefined {
 
   // TODO: determine why this is necessary
   if ('def' in field) {
@@ -275,6 +278,10 @@ export function createGraphQLFieldConfig(
 
       const subtype = createGraphQLFieldConfig(field.of, map, fieldName, `${path}[]`);
 
+      if (!subtype) {
+        throw new TypeError(`No field.of subtype for array field: "${path}"`);
+      }
+
       if (isLeafType(subtype.type)) {
         return {
           type: new GraphQLList(subtype.type)
@@ -292,12 +299,7 @@ export function createGraphQLFieldConfig(
       const fields = field.fields;
 
       if (!fields) {
-        return {
-          type: new GraphQLObjectType({
-            name: fieldName,
-            fields: {}
-          })
-        };
+        return;
       }
 
       return {

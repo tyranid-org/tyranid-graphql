@@ -2,7 +2,7 @@ import * as mongodb from 'mongodb';
 import { Tyr } from 'tyranid';
 import test from 'ava';
 
-import { schema } from '../src';
+import { graphqlize } from '../src';
 import { createTestData } from './data';
 
 
@@ -23,5 +23,5 @@ test.before(async () => {
 });
 
 test(() => {
-  schema(Tyr);
+  graphqlize(Tyr);
 });

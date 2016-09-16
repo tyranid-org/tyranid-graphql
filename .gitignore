@@ -1,3 +1,4 @@
 node_modules
 dist-es2015
 dist-node4
+npm-debug.log

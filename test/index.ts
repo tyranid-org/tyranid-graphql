@@ -4,7 +4,7 @@ import test from 'ava';
 
 import { graphqlize } from '../src';
 import { createTestData } from './data';
-
+import { GraphQLResult } from 'graphql';
 
 test.before(async () => {
   const db = await mongodb
@@ -23,11 +23,14 @@ test.before(async () => {
   graphqlize(Tyr);
 });
 
-test(async () => {
+
+test('Populating linked docs should succeed', async (t) => {
+
   const query = `
-    query IntrospectionTypeQuery {
-      __schema {
-        types {
+    query userNameQuery {
+      users {
+        name
+        organizationId {
           name
         }
       }
@@ -35,20 +38,31 @@ test(async () => {
   `;
 
   const result = await Tyr.graphql({ query });
-  console.log(JSON.stringify(result, null, 2));
-});
 
-
-test(async () => {
-  const query = `
-    query userNameQuery {
-      users {
-        _id
-        name
+  const expected = {
+    'users': [
+      {
+        'name': 'ben',
+        'organizationId': {
+          'name': 'Chipotle'
+        }
+      },
+      {
+        'name': 'ted',
+        'organizationId': {
+          'name': 'Chipotle'
+        }
+      },
+      {
+        'name': 'noTeams',
+        'organizationId': {
+          'name': 'Chipotle'
+        }
       }
-    }
-  `;
+    ]
+  };
 
-  const result = await Tyr.graphql({ query });
-  console.log(JSON.stringify(result, null, 2));
+
+  t.deepEqual<GraphQLResult>(result, { data: expected });
 });
+

@@ -145,6 +145,9 @@ export function collectionFieldConfig(
      * Resolve the query to this collection
      */
     resolve(parent, args, context) {
+      console.log(`RESOLVING...`);
+      console.log(JSON.stringify({parent, args, context}, null, 2));
+
       const query: { [key: string]: any } = {};
 
       if (single) {
@@ -290,7 +293,24 @@ export function createGraphQLFieldConfig(
         return {
           type: new GraphQLList(subtype.type),
           args: subtype.args,
-          resolve: subtype.resolve
+
+          async resolve(parent, args, context, astField) {
+            if (!subtype || !astField || !subtype.resolve) return [];
+
+            const parentFieldProp = astField.fieldName;
+            if (field.of && !(field.of.link)) return parentFieldProp;
+
+            const ids = parent[parentFieldProp];
+
+            if (!ids || !ids.length) return [];
+
+            const result = await subtype.resolve(parent, { ids }, context, astField);
+
+            console.log(result);
+
+            return result;
+          }
+
         };
       }
     }

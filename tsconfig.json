@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution" : "node",
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noImplicitReturns": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "removeComments": false,
+    "noLib": false,
+    "pretty": true,
+    "outDir": "./dist-es2015/",
+    "inlineSourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true
+  },
+  "files": [
+    "./test/index.ts",
+    "./src/index.ts",
+    "./node_modules/typed-graphql/graphql.d.ts"
+  ]
+}

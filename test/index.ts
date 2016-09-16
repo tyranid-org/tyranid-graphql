@@ -20,8 +20,35 @@ test.before(async () => {
   });
 
   await createTestData();
+  graphqlize(Tyr);
 });
 
-test(() => {
-  graphqlize(Tyr);
+test(async () => {
+  const query = `
+    query IntrospectionTypeQuery {
+      __schema {
+        types {
+          name
+        }
+      }
+    }
+  `;
+
+  const result = await Tyr.graphql({ query });
+  console.log(JSON.stringify(result, null, 2));
+});
+
+
+test(async () => {
+  const query = `
+    query userNameQuery {
+      users {
+        _id
+        name
+      }
+    }
+  `;
+
+  const result = await Tyr.graphql({ query });
+  console.log(JSON.stringify(result, null, 2));
 });

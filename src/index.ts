@@ -138,7 +138,7 @@ export function collectionFieldConfig(
 
   return {
 
-    type: colGraphQLType,
+    type: single ? colGraphQLType : new GraphQLList(colGraphQLType),
     args,
 
     /**

@@ -66,3 +66,26 @@ test('Populating linked docs should succeed', async (t) => {
   t.deepEqual<GraphQLResult>(result, { data: expected });
 });
 
+
+test('Array of linked properties should populate', async (t) => {
+
+  const query = `
+    query userNameQuery {
+      users {
+        name
+        teamIds {
+          name,
+          organizationId {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const result = await Tyr.graphql({ query });
+
+  console.log(JSON.stringify(result, null, 2));
+
+  t.pass();
+});

@@ -145,9 +145,6 @@ export function collectionFieldConfig(
      * Resolve the query to this collection
      */
     resolve(parent, args, context) {
-      console.log(`RESOLVING...`);
-      console.log(JSON.stringify({parent, args, context}, null, 2));
-
       const query: { [key: string]: any } = {};
 
       if (single) {
@@ -222,7 +219,8 @@ export function createGraphQLFieldConfig(
   field: Tyr.TyranidFieldDefinition,
   map: GraphQLOutputTypeMap,
   fieldName: string,
-  path: string
+  path: string,
+  single = true
 ): GraphQLFieldConfig | undefined {
 
   // TODO: determine why this is necessary
@@ -233,7 +231,7 @@ export function createGraphQLFieldConfig(
 
   if (field.link) {
     const col = Tyr.byName[field.link];
-    return collectionFieldConfig(col, map, true);
+    return collectionFieldConfig(col, map, single);
   }
 
   if (!field.is) {
@@ -279,7 +277,7 @@ export function createGraphQLFieldConfig(
         throw new TypeError(`No field.of for array field: "${path}"`);
       }
 
-      const subtype = createGraphQLFieldConfig(field.of, map, fieldName, `${path}[]`);
+      const subtype = createGraphQLFieldConfig(field.of, map, fieldName, `${path}[]`, false);
 
       if (!subtype) {
         throw new TypeError(`No field.of subtype for array field: "${path}"`);
@@ -304,11 +302,7 @@ export function createGraphQLFieldConfig(
 
             if (!ids || !ids.length) return [];
 
-            const result = await subtype.resolve(parent, { ids }, context, astField);
-
-            console.log(result);
-
-            return result;
+            return subtype.resolve(parent, { ids }, context, astField);
           }
 
         };

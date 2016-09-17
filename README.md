@@ -1,4 +1,5 @@
-## GraphQL frontend for Tyranid
+## GraphQL frontend for Tyranid [![Build Status](https://travis-ci.org/tyranid-org/tyranid-graphql.svg?branch=master)](https://travis-ci.org/tyranid-org/tyranid-graphql) [![codecov](https://codecov.io/gh/tyranid-org/tyranid-graphql/branch/master/graph/badge.svg)](https://codecov.io/gh/tyranid-org/tyranid-graphql)
+
 
 This library adds a graphql query interpreter for the [`tyranid`](https://github.com/tyranid-org/tyranid)
 mongodb ORM. The graphql schema is created from tyranid collection schemas using [`graphql-js`](https://github.com/graphql/graphql-js).

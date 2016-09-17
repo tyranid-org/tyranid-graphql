@@ -20,6 +20,7 @@
   "files": [
     "./test/index.ts",
     "./src/index.ts",
+    "./test/example/server.ts",
     "./node_modules/typed-graphql/graphql.d.ts",
     "./src/tyranid-extensions.d.ts"
   ]

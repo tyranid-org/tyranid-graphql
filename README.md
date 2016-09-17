@@ -34,6 +34,21 @@ const results = await Tyr.graphql({
 console.log(users[1].teamIds[2].organizationId.name); // => "Chipotle"
 ```
 
+## Interactive graphql server Example
+
+To see an example of `apollo-server` (http://dev.apollodata.com/core/)
+being used with a generated schema from tyranid, clone the repo, install deps...
+
+```shell
+npm install
+```
+
+and run the example server
+
+```shell
+npm start
+```
+
 
 ## Detailed Code Example
 

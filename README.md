@@ -36,6 +36,8 @@ console.log(users[1].teamIds[2].organizationId.name); // => "Chipotle"
 
 ## Interactive graphql server Example
 
+![Apollo server example](/test/example/example.gif)
+
 To see an example of `apollo-server` (http://dev.apollodata.com/core/)
 being used with a generated schema from tyranid, clone the repo, install deps...
 

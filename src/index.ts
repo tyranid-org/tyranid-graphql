@@ -51,15 +51,18 @@ export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
  * a promise resolving to document(s)
  */
 export function graphqlize(tyr: typeof Tyr) {
-  const schema = createGraphQLSchema(tyr.collections);
+  const schema = createGraphQLSchema(tyr);
 
-  tyr.graphql = function({ query, auth, perm = 'view' }) {
-    return graphql(schema, query, null, {
-      auth,
-      perm,
-      docCache: {}
-    });
-  };
+  tyr.graphql = <Tyr.TyranidGraphQLFunction> Object.assign(
+    function({ query, auth, perm = 'view' }: Tyr.TyranidGraphQlQueryOptions) {
+      return graphql(schema, query, null, {
+        auth,
+        perm,
+        docCache: {}
+      });
+    },
+    { schema }
+  );
 }
 
 
@@ -71,11 +74,11 @@ export function graphqlize(tyr: typeof Tyr) {
 /**
  * tyranid schema -> graphql schema
  */
-export function createGraphQLSchema(collections: Tyr.TyranidCollectionList) {
+export function createGraphQLSchema(tyr: typeof Tyr) {
   const typeMap: GraphQLOutputTypeMap = new Map();
   const queryFields: GraphQLFieldConfigMap = {};
 
-  collections.forEach(col => {
+  tyr.collections.forEach(col => {
     const name = col.def.name;
     if (!col.def.fields) throw new TypeError(`Collection "${name}" has no fields!`);
 

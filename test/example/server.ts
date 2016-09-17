@@ -26,7 +26,7 @@ import { createGraphQLSchema } from '../../src/';
   const graphQLServer = express();
 
   graphQLServer.use('/graphql', bodyParser.json(), apolloExpress({
-    schema: createGraphQLSchema(Tyr.collections)
+    schema: createGraphQLSchema(Tyr)
   }));
 
   graphQLServer.use('/graphiql', graphiqlExpress({

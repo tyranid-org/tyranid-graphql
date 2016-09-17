@@ -1,5 +1,5 @@
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
+import { GraphQLResult, GraphQLSchema } from 'graphql';
 
 declare module 'tyranid' {
 
@@ -11,9 +11,14 @@ declare module 'tyranid' {
       perm?: string;
     }
 
+    export interface TyranidGraphQLFunction {
+      (opts: TyranidGraphQlQueryOptions): Promise<GraphQLResult>;
+      schema: GraphQLSchema;
+    }
+
     // add graphql method to tyranid module
     // TODO: should be strongly typed, returning wrapped docs!
-    export function graphql(opts: TyranidGraphQlQueryOptions): Promise<GraphQLResult>;
+    export let graphql: TyranidGraphQLFunction;
   }
 
 }

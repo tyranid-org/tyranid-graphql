@@ -2,9 +2,9 @@ import * as mongodb from 'mongodb';
 import { Tyr } from 'tyranid';
 import test from 'ava';
 
-import { graphqlize, createGraphQLSchema } from '../src';
+import { graphqlize } from '../src';
 import { createTestData } from './data';
-import { GraphQLResult, printSchema } from 'graphql';
+import { GraphQLResult } from 'graphql';
 
 test.before(async () => {
   const db = await mongodb
@@ -166,9 +166,4 @@ test('Filtering by id paramter should work', async(t) => {
   };
 
   t.deepEqual<GraphQLResult>(result, expected);
-});
-
-
-test('Print schema', async() => {
-  console.log(printSchema(createGraphQLSchema(Tyr.collections)));
 });

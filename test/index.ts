@@ -127,3 +127,43 @@ test('Array of linked properties should populate', async (t) => {
 
   t.deepEqual<GraphQLResult>(result, expected);
 });
+
+
+test('Filtering by id paramter should work', async(t) => {
+
+  const ted = await Tyr.byName['user'].findOne({ name: 'ted' });
+
+  const query = `
+    query userNameQuery {
+      user(id: "${ted.$id}") {
+        name
+        teamIds {
+          name,
+          organizationId {
+            name
+          }
+        }
+      }
+    }
+  `;
+
+  const result = await Tyr.graphql({ query });
+
+  const expected = {
+    'data': {
+      'user': {
+        'name': 'ted',
+        'teamIds': [
+          {
+            'name': 'cavaEngineers',
+            'organizationId': {
+              'name': 'Cava'
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  t.deepEqual<GraphQLResult>(result, expected);
+});

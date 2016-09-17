@@ -229,7 +229,7 @@ export function createGraphQLFieldConfig(
 ): GraphQLFieldConfig | undefined {
 
   if (typeof field === 'string') {
-    warn(`Ignoring field "${field}" as it is a string`);
+    warn(`Ignoring field: "${field}" at path "${path}" as it is a string`);
     return;
   }
 
@@ -314,10 +314,11 @@ export function createGraphQLFieldConfig(
         return error(`No field.of for array field: "${path}"`);
       }
 
-      const subtype = createGraphQLFieldConfig(field.of, map, fieldName, `${path}[]`, false);
+      const subtype = createGraphQLFieldConfig(field.of, map, fieldName, `${path}_`, false);
 
       if (!subtype) {
-        return error(`No field.of subtype for array field: "${path}"`);
+        warn(`Ignoring field at path "${path}" as it has no field.of property`);
+        return;
       }
 
       if (isLeafType(subtype.type)) {
@@ -337,13 +338,20 @@ export function createGraphQLFieldConfig(
       const fields = field.fields;
 
       if (!fields) {
-        warn(`Ignoring object field: ${JSON.stringify(field)} as it has no schema`);
+        warn(`Ignoring object field at path "${path}" as it has no schema`);
+        return;
+      }
+
+      const defFields = createFieldThunk(fields, map, `${path}_`);
+
+      if (!defFields) {
+        warn(`Ignoring object field at path "${path}" as it has poorly defined schema`);
         return;
       }
 
       const type = new GraphQLObjectType({
-        name: fieldName,
-        fields: createFieldThunk(fields, map, `${path}_`)
+        name: `${path}_${fieldName}`,
+        fields: defFields
       });
 
       return {
@@ -351,7 +359,9 @@ export function createGraphQLFieldConfig(
       };
     }
 
-    default: return error(`Unable to map type "${field.is}" to GraphQLType instance`);
+    default: return error(
+      `Unable to map type "${field.is}" for field at path "${path}" to GraphQLType instance`
+    );
   }
 
 }

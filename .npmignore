@@ -1,0 +1,6 @@
+dist-es2015/test
+dist-node4/test
+node_modules
+test
+coverage
+.nyc_output

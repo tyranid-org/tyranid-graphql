@@ -122,6 +122,12 @@ export const User = new Tyr.Collection({
         link: 'team'
       }
     },
+    nested: {
+      is: 'object',
+      fields: {
+        inner: { is: 'integer', defaultValue: 1 }
+      }
+    },
     organizationId: { link: 'organization' }
   }
 });

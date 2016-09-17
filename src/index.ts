@@ -20,19 +20,9 @@ import {
 
 
 
-
-export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
-
-
-
-
-
-
 /**
  * TODO:
  *
- *   - create root query objects for each collection
- *   - create nested field objects, add to map
  *   - ensure that enum collections work
  *
  *   // later -- optimizations / bonus...
@@ -41,6 +31,8 @@ export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
  */
 
 
+
+export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
 
 
 
@@ -67,8 +59,13 @@ export function graphqlize(tyr: typeof Tyr) {
 
 
 
+function warn(message: string) {
+  console.warn(`tyranid-graphql: WARNING -- ${message}`);
+}
 
-
+function error(message: string): never {
+  throw new Error(`tyranid-graphql: ERROR -- ${message}`);
+}
 
 
 /**
@@ -80,7 +77,7 @@ export function createGraphQLSchema(tyr: typeof Tyr) {
 
   tyr.collections.forEach(col => {
     const name = col.def.name;
-    if (!col.def.fields) throw new TypeError(`Collection "${name}" has no fields!`);
+    if (!col.def.fields) return error(`Collection "${name}" has no fields!`);
 
     const fields = createFieldThunk(col.def.fields, typeMap, `${name}_`);
 
@@ -120,7 +117,7 @@ export function collectionFieldConfig(
   const colGraphQLType = map.get(col.def.name);
 
   if (!colGraphQLType) {
-    throw new TypeError(`Collection "${col.def.name}" has no graphQLType definition.`);
+    return error(`Collection "${col.def.name}" has no graphQLType definition.`);
   }
 
   /**
@@ -196,15 +193,19 @@ export function createFieldThunk(
   return function() {
     const fieldsObj: GraphQLFieldConfigMap = {};
 
-    if (!fields) throw new TypeError(`No fields given to createFieldThunk!`);
+    if (!fields) return error(`No fields given to createFieldThunk!`);
 
+    let hasFields = false;
     for (const fieldName in fields) {
+      hasFields = true;
       const field = fields[fieldName];
       const fieldConfig = createGraphQLFieldConfig(field, map, fieldName, `${path}${fieldName}`, true);
       if (fieldConfig) {
         fieldsObj[fieldName] = fieldConfig;
       }
     }
+
+    if (!hasFields) return error(`path "${path}" has no entries in its fields object!`);
 
     return fieldsObj;
   };
@@ -226,6 +227,11 @@ export function createGraphQLFieldConfig(
   path: string,
   single: boolean
 ): GraphQLFieldConfig | undefined {
+
+  if (typeof field === 'string') {
+    warn(`Ignoring field "${field}" as it is a string`);
+    return;
+  }
 
   // TODO: determine why this is necessary
   if ('def' in field) {
@@ -252,7 +258,7 @@ export function createGraphQLFieldConfig(
         if (!linkField) return single ? null : [];
 
         if (!linkType.resolve) {
-          throw new TypeError(`No linkType resolve function found for collection: ${field.link}`);
+          return error(`No linkType resolve function found for collection: ${field.link}`);
         }
 
         const linkArgs = single
@@ -267,7 +273,7 @@ export function createGraphQLFieldConfig(
   }
 
   if (!field.is) {
-    throw new TypeError(`No field.is definition for "${path}"`);
+    return error(`No field.is definition for "${path}"`);
   }
 
   switch (field.is) {
@@ -305,13 +311,13 @@ export function createGraphQLFieldConfig(
 
     case 'array': {
       if (!field.of) {
-        throw new TypeError(`No field.of for array field: "${path}"`);
+        return error(`No field.of for array field: "${path}"`);
       }
 
       const subtype = createGraphQLFieldConfig(field.of, map, fieldName, `${path}[]`, false);
 
       if (!subtype) {
-        throw new TypeError(`No field.of subtype for array field: "${path}"`);
+        return error(`No field.of subtype for array field: "${path}"`);
       }
 
       if (isLeafType(subtype.type)) {
@@ -331,6 +337,7 @@ export function createGraphQLFieldConfig(
       const fields = field.fields;
 
       if (!fields) {
+        warn(`Ignoring object field: ${JSON.stringify(field)} as it has no schema`);
         return;
       }
 
@@ -344,7 +351,7 @@ export function createGraphQLFieldConfig(
       };
     }
 
-    default: throw new TypeError(`Unable to map type "${field.is}" to GraphQLType instance`);
+    default: return error(`Unable to map type "${field.is}" to GraphQLType instance`);
   }
 
 }

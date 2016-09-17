@@ -1,10 +1,41 @@
 ## GraphQL frontend for Tyranid [![Build Status](https://travis-ci.org/tyranid-org/tyranid-graphql.svg?branch=master)](https://travis-ci.org/tyranid-org/tyranid-graphql) [![codecov](https://codecov.io/gh/tyranid-org/tyranid-graphql/branch/master/graph/badge.svg)](https://codecov.io/gh/tyranid-org/tyranid-graphql)
 
-
 This library adds a graphql query interpreter for the [`tyranid`](https://github.com/tyranid-org/tyranid)
 mongodb ORM. The graphql schema is created from tyranid collection schemas using [`graphql-js`](https://github.com/graphql/graphql-js).
 
-## Code Example
+## Quick Example
+
+After calling `graphqlize(Tyr)` on tyranid, use graphql queries for complex populations...
+
+```javascript
+import { Tyr } from 'tyranid';
+import { graphqlize } from 'tyranid-graphql';
+
+// ...
+graphqlize(Tyr); // (synchronous)
+// ...
+
+const results = await Tyr.graphql({
+  query: `
+    query userTeams {
+      users {
+        name
+        teamIds {
+          name,
+          organizationId {
+            name
+          }
+        }
+      }
+    }
+  `
+});
+
+console.log(users[1].teamIds[2].organizationId.name); // => "Chipotle"
+```
+
+
+## Detailed Code Example
 
 Say we have the following tyranid collections...
 

@@ -16,67 +16,34 @@ export async function createTestData() {
   /**
     Organiations
    */
-  const [
-    chipotle,
-    chopped,
-    cava
-  ] = await Promise.all([
-    Organization.insert({ name: 'Chipotle' }),
-    Organization.insert({ name: 'Chopped' }),
-    Organization.insert({ name: 'Cava' })
-  ]);
+  const chipotle = await Organization.insert({ name: 'Chipotle' });
+  const chopped = await Organization.insert({ name: 'Chopped' });
+  const cava = await Organization.insert({ name: 'Cava' });
 
-  /**
-    Organiations
-   */
-  const [
-    // chipotleInventory,
-    // choppedInventory,
-    // cavaInventory
-  ] = await Promise.all([
-    Inventory.insert({ name: 'Chipotle', organizationId: chipotle.$id }),
-    Inventory.insert({ name: 'Chopped', organizationId: chopped.$id }),
-    Inventory.insert({ name: 'Cava', organizationId: cava.$id })
-  ]);
+
+  await Inventory.insert({ name: 'Chipotle', organizationId: chipotle.$id });
+  await Inventory.insert({ name: 'Chopped', organizationId: chopped.$id });
+  await Inventory.insert({ name: 'Cava', organizationId: cava.$id });
 
   /**
     Blogs
    */
-  const [
-    chipotleFoodBlog,
-    chipotleCorporateBlog,
-    choppedBlog,
-    cavaBlog
-  ] = await Promise.all([
-    Blog.insert({ name: 'Burritos Etc', organizationId: chipotle.$id }),
-    Blog.insert({ name: 'Mexican Empire', organizationId: chipotle.$id }),
-    Blog.insert({ name: 'Salads are great', organizationId: chopped.$id }),
-    Blog.insert({ name: 'Spinach + Lentils', organizationId: cava.$id })
-  ]);
-
+  const chipotleFoodBlog = await Blog.insert({ name: 'Burritos Etc', organizationId: chipotle.$id });
+  const chipotleCorporateBlog = await Blog.insert({ name: 'Mexican Empire', organizationId: chipotle.$id });
+  const choppedBlog = await Blog.insert({ name: 'Salads are great', organizationId: chopped.$id });
+  const cavaBlog = await Blog.insert({ name: 'Spinach + Lentils', organizationId: cava.$id });
 
   /**
     Posts
    */
-  const [
-    // whyBurritosAreAmazing,
-    // ecoliChallenges,
-    // weDontKnowWhyPeopleGotSick,
-    // cleaningUp,
-    // burritoManagement,
-    // saladsAreGreat,
-    // guacGreens,
-    // lentilsAreGreat
-  ] = await Promise.all([
-    Blog.insert({ name: 'Why burritos are amazing.', blogId: chipotleFoodBlog.$id }),
-    Blog.insert({ name: 'Ecoli challenges.', blogId: chipotleFoodBlog.$id }),
-    Blog.insert({ name: 'We don\' actually know why people got sick.', blogId: chipotleFoodBlog.$id }),
-    Blog.insert({ name: 'Re-evaluating the way we clean up.', blogId: chipotleCorporateBlog.$id }),
-    Blog.insert({ name: 'Burrito Management, a new paradigm.', blogId: chipotleCorporateBlog.$id }),
-    Blog.insert({ name: 'Salads are great, the post.', blogId: choppedBlog.$id }),
-    Blog.insert({ name: 'Guacamole Greens to the rescue!.', blogId: choppedBlog.$id }),
-    Blog.insert({ name: 'Lentils are great', blogId: cavaBlog.$id })
-  ]);
+  await Blog.insert({ name: 'Why burritos are amazing.', blogId: chipotleFoodBlog.$id });
+  await Blog.insert({ name: 'Ecoli challenges.', blogId: chipotleFoodBlog.$id });
+  await Blog.insert({ name: 'We don\' actually know why people got sick.', blogId: chipotleFoodBlog.$id });
+  await Blog.insert({ name: 'Re-evaluating the way we clean up.', blogId: chipotleCorporateBlog.$id });
+  await Blog.insert({ name: 'Burrito Management, a new paradigm.', blogId: chipotleCorporateBlog.$id });
+  await Blog.insert({ name: 'Salads are great, the post.', blogId: choppedBlog.$id });
+  await Blog.insert({ name: 'Guacamole Greens to the rescue!.', blogId: choppedBlog.$id });
+  await Blog.insert({ name: 'Lentils are great', blogId: cavaBlog.$id });
 
 
   /**
@@ -91,52 +58,36 @@ export async function createTestData() {
   ]);
 
 
-  /**
-    Teams
-   */
-  const [
-    burritoMakers,
-    chipotleMarketing,
-    cavaEngineers
-  ] = await Promise.all([
-    Team.insert({ name: 'burritoMakers', organizationId: chipotle.$id }),
-    Team.insert({ name: 'chipotleMarketing', organizationId: chipotle.$id }),
-    Team.insert({ name: 'cavaEngineers', organizationId: cava.$id })
-  ]);
+  const burritoMakers = await Team.insert({ name: 'burritoMakers', organizationId: chipotle.$id });
+  const chipotleMarketing = await Team.insert({ name: 'chipotleMarketing', organizationId: chipotle.$id });
+  const cavaEngineers = await Team.insert({ name: 'cavaEngineers', organizationId: cava.$id });
 
   await Team.insert({ name: 'choppedExec', organizationId: chopped.$id });
 
   /**
     Users
    */
-  const [
-    ben,
-    ted
-  ] = await Promise.all([
-
-    User.insert({
+  const ben = await User.insert({
       name: 'ben',
       organizationId: chipotle.$id,
       teamIds: [
         burritoMakers.$id,
         chipotleMarketing.$id
       ]
-    }),
+    });
 
-    User.insert({
-      name: 'ted',
-      organizationId: cava.$id,
-      teamIds: [
-        cavaEngineers.$id
-      ]
-    }),
+  const ted = await User.insert({
+    name: 'ted',
+    organizationId: cava.$id,
+    teamIds: [
+      cavaEngineers.$id
+    ]
+  });
 
-    User.insert({
-      name: 'noTeams',
-      organizationId: chipotle.$id
-    })
-
-  ]);
+  User.insert({
+    name: 'noTeams',
+    organizationId: chipotle.$id
+  });
 
   await Promise.all([
     Chart.insert({

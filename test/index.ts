@@ -40,30 +40,31 @@ test('Populating linked docs should succeed', async (t) => {
   const result = await Tyr.graphql({ query });
 
   const expected = {
-    'users': [
-      {
-        'name': 'ben',
-        'organizationId': {
-          'name': 'Chipotle'
+    'data': {
+      'users': [
+        {
+          'name': 'ben',
+          'organizationId': {
+            'name': 'Chipotle'
+          }
+        },
+        {
+          'name': 'ted',
+          'organizationId': {
+            'name': 'Cava'
+          }
+        },
+        {
+          'name': 'noTeams',
+          'organizationId': {
+            'name': 'Chipotle'
+          }
         }
-      },
-      {
-        'name': 'ted',
-        'organizationId': {
-          'name': 'Chipotle'
-        }
-      },
-      {
-        'name': 'noTeams',
-        'organizationId': {
-          'name': 'Chipotle'
-        }
-      }
-    ]
+      ]
+    }
   };
 
-
-  t.deepEqual<GraphQLResult>(result, { data: expected });
+  t.deepEqual<GraphQLResult>(result, expected);
 });
 
 
@@ -85,7 +86,44 @@ test('Array of linked properties should populate', async (t) => {
 
   const result = await Tyr.graphql({ query });
 
-  console.log(JSON.stringify(result, null, 2));
+  const expected = {
+    'data': {
+      'users': [
+        {
+          'name': 'ben',
+          'teamIds': [
+            {
+              'name': 'burritoMakers',
+              'organizationId': {
+                'name': 'Chipotle'
+              }
+            },
+            {
+              'name': 'chipotleMarketing',
+              'organizationId': {
+                'name': 'Chipotle'
+              }
+            }
+          ]
+        },
+        {
+          'name': 'ted',
+          'teamIds': [
+            {
+              'name': 'cavaEngineers',
+              'organizationId': {
+                'name': 'Cava'
+              }
+            }
+          ]
+        },
+        {
+          'name': 'noTeams',
+          'teamIds': []
+        }
+      ]
+    }
+  };
 
-  t.pass();
+  t.deepEqual<GraphQLResult>(result, expected);
 });

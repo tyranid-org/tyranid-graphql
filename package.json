@@ -8,9 +8,10 @@
     "build": "rm -rf ./dist-es2015/ ./dist-node4/ && npm run lint && npm run tsc && npm run babel",
     "pretest": "npm run build",
     "prepublish": "npm run test",
-    "test": "./node_modules/.bin/ava",
+    "test": "./node_modules/.bin/nyc ./node_modules/.bin/ava",
     "tsc": "./node_modules/typescript/bin/tsc -d",
-    "lint": "./node_modules/tslint/bin/tslint -c ./tslint.json ./{test,lib}/**/*.ts && echo '> \\033[0;32mlinter passed!\\033[0m'"
+    "lint": "./node_modules/tslint/bin/tslint -c ./tslint.json ./{test,lib}/**/*.ts && echo '> \\033[0;32mlinter passed!\\033[0m'",
+    "coverage": "./node_modules/.bin/nyc report --reporter=text-lcov > coverage.lcov && ./node_modules/.bin/codecov"
   },
   "author": "bsouthga@gmail.com",
   "license": "MIT",
@@ -21,7 +22,9 @@
     "babel-cli": "^6.14.0",
     "babel-core": "^6.14.0",
     "babel-preset-es2015-node4": "^2.1.0",
+    "codecov": "^1.0.1",
     "mongodb": "^2.2.10",
+    "nyc": "^8.3.0",
     "tslint": "^3.15.1",
     "typed-graphql": "^1.0.1",
     "typescript": "^2.0.2",
@@ -39,6 +42,11 @@
   "ava": {
     "files": [
       "dist-node4/test/index.js"
+    ]
+  },
+  "nyc": {
+    "include": [
+      "dist-node4/src"
     ]
   }
 }

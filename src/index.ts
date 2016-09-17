@@ -138,13 +138,14 @@ export function collectionFieldConfig(
 
   return {
 
-    type: single ? colGraphQLType : new GraphQLList(colGraphQLType),
     args,
+
+    type: single ? colGraphQLType : new GraphQLList(colGraphQLType),
 
     /**
      * Resolve the query to this collection
      */
-    resolve(parent, args, context) {
+    async resolve(parent, args, context) {
       const query: { [key: string]: any } = {};
 
       if (single) {
@@ -155,7 +156,7 @@ export function collectionFieldConfig(
         return col.findOne({
           query,
           auth: context && context.auth,
-          perm: context && context.auth
+          perm: context && context.perm
         });
       }
 
@@ -168,7 +169,7 @@ export function collectionFieldConfig(
       return col.findAll({
         query,
         auth: context && context.auth,
-        perm: context && context.auth
+        perm: context && context.perm
       });
     }
 
@@ -196,7 +197,7 @@ export function createFieldThunk(
 
     for (const fieldName in fields) {
       const field = fields[fieldName];
-      const fieldConfig = createGraphQLFieldConfig(field, map, fieldName, `${path}${fieldName}`);
+      const fieldConfig = createGraphQLFieldConfig(field, map, fieldName, `${path}${fieldName}`, true);
       if (fieldConfig) {
         fieldsObj[fieldName] = fieldConfig;
       }
@@ -220,7 +221,7 @@ export function createGraphQLFieldConfig(
   map: GraphQLOutputTypeMap,
   fieldName: string,
   path: string,
-  single = true
+  single: boolean
 ): GraphQLFieldConfig | undefined {
 
   // TODO: determine why this is necessary
@@ -229,9 +230,37 @@ export function createGraphQLFieldConfig(
     field = ((field as any).def as Tyr.TyranidFieldDefinition);
   }
 
+  /**
+   * Wrap single type in list if desired
+   */
+  const wrap = (type: GraphQLOutputType) =>
+    single ? type : new GraphQLList(type);
+
+
   if (field.link) {
     const col = Tyr.byName[field.link];
-    return collectionFieldConfig(col, map, single);
+    const linkType = collectionFieldConfig(col, map, single);
+
+    return {
+      type: linkType.type,
+      async resolve(parent, args, context, ast) {
+        const linkField = parent[fieldName];
+
+        if (!linkField) return single ? null : [];
+
+        if (!linkType.resolve) {
+          throw new TypeError(`No linkType resolve function found for collection: ${field.link}`);
+        }
+
+        const linkArgs = single
+          ? { id: linkField }
+          : { ids: linkField };
+
+        const result = await linkType.resolve(parent, linkArgs, context, ast);
+
+        return result;
+      }
+    };
   }
 
   if (!field.is) {
@@ -248,28 +277,27 @@ export function createGraphQLFieldConfig(
     case 'date': // TODO: create date type
     case 'uid':
       return {
-        type: GraphQLString
+        type: wrap(GraphQLString)
       };
 
     case 'boolean':
       return {
-        type: GraphQLBoolean
+        type: wrap(GraphQLBoolean)
       };
 
     case 'double':
       return {
-        type: GraphQLFloat
+        type: wrap(GraphQLFloat)
       };
 
     case 'integer':
       return {
-        type: GraphQLInt
+        type: wrap(GraphQLInt)
       };
 
     case 'mongoid':
-      // parse / resolve to id
       return {
-        type: GraphQLID
+        type: wrap(GraphQLID)
       };
 
     case 'array': {
@@ -285,26 +313,13 @@ export function createGraphQLFieldConfig(
 
       if (isLeafType(subtype.type)) {
         return {
-          type: new GraphQLList(subtype.type)
+          type: subtype.type
         };
       } else {
         return {
-          type: new GraphQLList(subtype.type),
+          type: subtype.type,
           args: subtype.args,
-
-          async resolve(parent, args, context, astField) {
-            if (!subtype || !astField || !subtype.resolve) return [];
-
-            const parentFieldProp = astField.fieldName;
-            if (field.of && !(field.of.link)) return parentFieldProp;
-
-            const ids = parent[parentFieldProp];
-
-            if (!ids || !ids.length) return [];
-
-            return subtype.resolve(parent, { ids }, context, astField);
-          }
-
+          resolve: subtype.resolve
         };
       }
     }
@@ -316,11 +331,13 @@ export function createGraphQLFieldConfig(
         return;
       }
 
+      const type = new GraphQLObjectType({
+        name: fieldName,
+        fields: createFieldThunk(fields, map, `${path}_`)
+      });
+
       return {
-        type: new GraphQLObjectType({
-          name: fieldName,
-          fields: createFieldThunk(fields, map, `${path}_`)
-        })
+        type: wrap(type)
       };
     }
 

@@ -2,7 +2,7 @@
   "name": "tyranid-graphql",
   "version": "0.0.2",
   "description": "GraphQL plugin for tyranid",
-  "main": "dist-node4/index.js",
+  "main": "dist-node4/src/index.js",
   "scripts": {
     "start": "npm run build && node ./dist-node4/test/example/server.js",
     "babel": "./node_modules/.bin/babel ./dist-es2015 --out-dir ./dist-node4",

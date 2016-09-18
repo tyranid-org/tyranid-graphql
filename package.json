@@ -1,6 +1,6 @@
 {
   "name": "tyranid-graphql",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "GraphQL plugin for tyranid",
   "main": "dist-node4/src/index.js",
   "scripts": {

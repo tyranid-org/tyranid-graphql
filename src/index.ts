@@ -14,6 +14,7 @@ import {
   GraphQLFieldConfig,
   GraphQLFieldConfigMapThunk,
   GraphQLList,
+  GraphQLFieldConfigArgumentMap,
   isLeafType
 } from 'graphql';
 
@@ -22,8 +23,6 @@ import {
 
 /**
  * TODO:
- *
- *   - ensure that enum collections work
  *
  *   // later -- optimizations / bonus...
  *   - map query info to mongodb projection
@@ -45,8 +44,8 @@ export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
 export function graphqlize(tyr: typeof Tyr) {
   const schema = createGraphQLSchema(tyr);
 
-  tyr.graphql = <Tyr.TyranidGraphQLFunction> Object.assign(
-    function({ query, auth, perm = 'view' }: Tyr.TyranidGraphQlQueryOptions) {
+  tyr.graphql = <Tyr.TyranidGraphQLFunction>Object.assign(
+    function ({ query, auth, perm = 'view' }: Tyr.TyranidGraphQlQueryOptions) {
       return graphql(schema, query, null, {
         auth,
         perm,
@@ -113,71 +112,98 @@ export function collectionFieldConfig(
   map: GraphQLOutputTypeMap,
   single = true
 ): GraphQLFieldConfig {
-  // get the created graphQl type for this collection
   const colGraphQLType = map.get(col.def.name);
 
   if (!colGraphQLType) {
     return error(`Collection "${col.def.name}" has no graphQLType definition.`);
   }
 
-  /**
-   * Collection query arguments,
-   * currently just id(s)
-   */
-  const args = single
-    ? {
-      id: {
-        type: GraphQLID
-      }
-    }
-    : {
-      ids: {
-        type: new GraphQLList(GraphQLID)
-      }
-    };
+  const fields = col.def.fields;
+
+  if (!fields) {
+    return error(`Collection "${col.def.name}" has no fields property.`);
+  }
+
+  const args = createArguments(fields, map);
+
+  const queryFunction: (...args: any[]) => Promise<any> = single
+    ? col.findOne.bind(col)
+    : col.findAll.bind(col);
+
+  const type = single
+    ? colGraphQLType
+    : new GraphQLList(colGraphQLType);
+
+  const argParser = createArgumentParser(fields);
 
   return {
-
     args,
-
-    type: single ? colGraphQLType : new GraphQLList(colGraphQLType),
-
-    /**
-     * Resolve the query to this collection
-     */
-    async resolve(parent, args, context) {
-      const query: { [key: string]: any } = {};
-
-      if (single) {
-        if (args && args['id']) {
-          query['_id'] = new ObjectID(args['id']);
-        }
-
-        return col.findOne({
-          query,
-          auth: context && context.auth,
-          perm: context && context.perm
-        });
-      }
-
-      if (args && Array.isArray(args['ids'])) {
-        query['_id'] = {
-          $in: args['ids'].map((id: string) => new ObjectID(id))
-        };
-      }
-
-      return col.findAll({
-        query,
+    type,
+    resolve(parent, args, context) {
+      return queryFunction({
+        query: argParser(parent, args),
         auth: context && context.auth,
         perm: context && context.perm
       });
     }
-
   };
 }
 
 
 
+/**
+ * map properties of collections to argumements
+ */
+export function createArguments(
+  fields: Tyr.TyranidFieldsObject,
+  map: GraphQLOutputTypeMap
+) {
+  const argMap: GraphQLFieldConfigArgumentMap = {};
+
+  for (const fieldName in fields) {
+    const field = (fields[fieldName] as any).def;
+    if (field.is && (field.is !== 'object') && (field.is !== 'array')) {
+      const fieldType = createGraphQLFieldConfig(field, map, fieldName, '', true);
+      if (fieldType && isLeafType(fieldType.type)) {
+        argMap[fieldName] = {
+          type: new GraphQLList((fieldType.type as any))
+        };
+      };
+    }
+    if (field.link) {
+      argMap[fieldName] = {
+        type: new GraphQLList(GraphQLID)
+      };
+    }
+  }
+  return argMap;
+}
+
+
+
+export function createArgumentParser(
+  fields: Tyr.TyranidFieldsObject
+): (parent: any, args: any) => any {
+  return function (parent: any, args: any) {
+    if (!args) return {};
+
+    const query: any = {};
+    for (const prop in args) {
+      const field = (fields[prop] as any).def;
+      if (field.link || (field.is === 'mongoid')) {
+        query[prop] = {
+          $in: [].concat(args[prop]).map((id: any) => new ObjectID(id))
+        };
+      } else {
+        query[prop] = {
+          $in: args[prop]
+        };
+      }
+    }
+
+    return query;
+  };
+}
 
 
 
@@ -190,7 +216,7 @@ export function createFieldThunk(
   map: GraphQLOutputTypeMap,
   path = ''
 ): GraphQLFieldConfigMapThunk {
-  return function() {
+  return function () {
     const fieldsObj: GraphQLFieldConfigMap = {};
 
     if (!fields) return error(`No fields given to createFieldThunk!`);
@@ -249,10 +275,14 @@ export function createGraphQLFieldConfig(
   if (field.link) {
     const col = Tyr.byName[field.link];
     const linkType = collectionFieldConfig(col, map, single);
+    const colFields = col.def.fields;
+
+    if (!colFields) return error(`No fields found for collection ${col.def.name}`);
 
     return {
       type: linkType.type,
-      async resolve(parent, args, context, ast) {
+      args: createArguments(colFields, map),
+      resolve(parent, args, context, ast) {
         const linkField = parent[fieldName];
 
         if (!linkField) return single ? null : [];
@@ -261,13 +291,8 @@ export function createGraphQLFieldConfig(
           return error(`No linkType resolve function found for collection: ${field.link}`);
         }
 
-        const linkArgs = single
-          ? { id: linkField }
-          : { ids: linkField };
-
-        const result = await linkType.resolve(parent, linkArgs, context, ast);
-
-        return result;
+        const linkArgs = Object.assign({ _id: [].concat(linkField) }, args);
+        return linkType.resolve(parent, linkArgs, context, ast);
       }
     };
   }

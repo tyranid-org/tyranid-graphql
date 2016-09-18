@@ -129,13 +129,13 @@ test('Array of linked properties should populate', async (t) => {
 });
 
 
-test('Filtering by id paramter should work', async(t) => {
+test('Filtering by id parameter should work', async(t) => {
 
   const ted = await Tyr.byName['user'].findOne({ name: 'ted' });
 
   const query = `
     query userNameQuery {
-      user(id: "${ted.$id}") {
+      user(_id: ["${ted.$id}"]) {
         name
         teamIds {
           name,

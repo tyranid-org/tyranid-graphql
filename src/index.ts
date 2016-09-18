@@ -18,23 +18,7 @@ import {
   isLeafType
 } from 'graphql';
 
-
-
-
-/**
- * TODO:
- *
- *   // later -- optimizations / bonus...
- *   - map query info to mongodb projection
- *   - pass authentication paramters to each node if _auth / _perm flags
- */
-
-
-
 export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
-
-
-
 
 
 /**
@@ -55,7 +39,6 @@ export function graphqlize(tyr: typeof Tyr) {
     { schema }
   );
 }
-
 
 
 function warn(message: string) {
@@ -96,11 +79,6 @@ export function createGraphQLSchema(tyr: typeof Tyr) {
     })
   });
 }
-
-
-
-
-
 
 
 /**
@@ -150,7 +128,6 @@ export function collectionFieldConfig(
 }
 
 
-
 /**
  * map properties of collections to argumements
  */
@@ -162,6 +139,7 @@ export function createArguments(
 
   for (const fieldName in fields) {
     const field = (fields[fieldName] as any).def;
+
     if (field.is && (field.is !== 'object') && (field.is !== 'array')) {
       const fieldType = createGraphQLFieldConfig(field, map, fieldName, '', true);
       if (fieldType && isLeafType(fieldType.type)) {
@@ -170,17 +148,21 @@ export function createArguments(
         };
       };
     }
-    if (field.link) {
+
+    if (field.link || (field.is === 'array' && field.of && field.of.link)) {
       argMap[fieldName] = {
         type: new GraphQLList(GraphQLID)
       };
     }
+
   }
   return argMap;
 }
 
 
-
+/**
+ * Create a function which maps graphql arguments to a mongo query
+ */
 export function createArgumentParser(
   fields: Tyr.TyranidFieldsObject
 ): (parent: any, args: any) => any {
@@ -189,8 +171,11 @@ export function createArgumentParser(
 
     const query: any = {};
     for (const prop in args) {
+      // TODO: fix typings on tyranid
       const field = (fields[prop] as any).def;
-      if (field.link || (field.is === 'mongoid')) {
+      if ( field.link ||
+          (field.is === 'mongoid') ||
+          (field.is === 'array' && field.of && field.of.link)) {
         query[prop] = {
           $in: [].concat(args[prop]).map((id: any) => new ObjectID(id))
         };
@@ -206,10 +191,8 @@ export function createArgumentParser(
 }
 
 
-
 /**
  * Create lazy value to contain fields for a particular tyranid field definition object
- * NOTE: mutually recursive with createGraphQLFieldConfig()
  */
 export function createFieldThunk(
   fields: { [key: string]: Tyr.TyranidFieldDefinition },
@@ -238,13 +221,8 @@ export function createFieldThunk(
 }
 
 
-
-
-
-
 /**
  * given a field object, create an individual GraphQLType instance
- * NOTE: mutually recursive with createFieldThunk()
  */
 export function createGraphQLFieldConfig(
   field: Tyr.TyranidFieldDefinition,
@@ -284,6 +262,7 @@ export function createGraphQLFieldConfig(
       args: createArguments(colFields, map),
       resolve(parent, args, context, ast) {
         const linkField = parent[fieldName];
+        args = args || {};
 
         if (!linkField) return single ? null : [];
 
@@ -291,7 +270,21 @@ export function createGraphQLFieldConfig(
           return error(`No linkType resolve function found for collection: ${field.link}`);
         }
 
-        const linkArgs = Object.assign({ _id: [].concat(linkField) }, args);
+        const linkIds = [].concat(linkField);
+        const linkArgs: any = {};
+
+        if (args['_id']) {
+          const argIds = <string[]> (Array.isArray(args['_id'])
+            ? args['_id']
+            : [ args['_id'] ]);
+
+          const argIdSet = new Set(argIds);
+
+          linkArgs['_id'] = linkIds.filter((id: any) => argIdSet.has(id.toString()));
+        } else {
+          linkArgs['_id'] = linkIds;
+        }
+
         return linkType.resolve(parent, linkArgs, context, ast);
       }
     };
@@ -308,7 +301,7 @@ export function createGraphQLFieldConfig(
     case 'email':
     case 'image':
     case 'password':
-    case 'date': // TODO: create date type
+    case 'date':
     case 'uid':
       return {
         type: wrap(GraphQLString)

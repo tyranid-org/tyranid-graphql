@@ -15,6 +15,8 @@ import {
   GraphQLFieldConfigMapThunk,
   GraphQLList,
   GraphQLFieldConfigArgumentMap,
+  GraphQLResolveInfo,
+  Field,
   isLeafType
 } from 'graphql';
 
@@ -28,7 +30,7 @@ export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
 export function graphqlize(tyr: typeof Tyr) {
   const schema = createGraphQLSchema(tyr);
 
-  tyr.graphql = <Tyr.TyranidGraphQLFunction>Object.assign(
+  tyr.graphql = <Tyr.TyranidGraphQLFunction> Object.assign(
     function ({ query, auth, variables, perm = 'view' }: Tyr.TyranidGraphQlQueryOptions) {
       const context = {
         auth,
@@ -105,9 +107,10 @@ export function collectionFieldConfig(
 
   const args = createArguments(fields, map);
 
-  const queryFunction: (...args: any[]) => Promise<any> = single
-    ? col.findOne.bind(col)
-    : col.findAll.bind(col);
+  const queryFunction: (...args: any[]) => Promise<any> =
+    single
+      ? col.findOne.bind(col)
+      : col.findAll.bind(col);
 
   const type = single
     ? colGraphQLType
@@ -118,14 +121,66 @@ export function collectionFieldConfig(
   return {
     args,
     type,
-    resolve(parent, args, context) {
+    resolve(parent, args, context, operation) {
+      /**
+       * extract query arguments and format for consumption by mongo
+       */
+      const query = argParser(parent, args);
+
+      // default to full projection
+      let project: any;
+
+      /**
+       * find selections for this node,
+       * add to mongodb projection
+       */
+      if (operation) {
+        project = createProjection(operation);
+      }
+
       return queryFunction({
-        query: argParser(parent, args),
+        query,
+        fields: project,
         auth: context && context.auth,
         perm: context && context.perm
       });
     }
   };
+}
+
+
+/**
+ * Get the immediate child selections for
+ * the current query node from the operation and create
+ * a mongodb projection
+ */
+export function createProjection(info: GraphQLResolveInfo): any {
+  // TODO: PR graphql typings to add path prop
+  const path = (info as any).path as string[];
+
+  let selections = info.operation.selectionSet.selections;
+  for (const fieldName of path) {
+    for (const selection of selections) {
+      const field = selection as Field;
+      if (fieldName === field.name.value) {
+        if (field.selectionSet) {
+          selections = field.selectionSet.selections;
+          continue;
+        }
+      }
+    }
+  }
+
+  if (!selections || !selections.length) return;
+
+  const projection: any = { _id: 1 };
+
+  for (const selection of selections) {
+    const field = selection as Field;
+    projection[field.name.value] = 1;
+  }
+
+  return projection;
 }
 
 
@@ -139,13 +194,14 @@ export function createArguments(
   const argMap: GraphQLFieldConfigArgumentMap = {};
 
   for (const fieldName in fields) {
-    const field = (fields[fieldName] as any).def;
+    // TODO: why do we need to grab def again?
+    const field = <Tyr.TyranidFieldDefinition> (fields[fieldName] as any).def;
 
     if (field.is && (field.is !== 'object') && (field.is !== 'array')) {
       const fieldType = createGraphQLFieldConfig(field, map, fieldName, '', true);
       if (fieldType && isLeafType(fieldType.type)) {
         argMap[fieldName] = {
-          type: new GraphQLList((fieldType.type as any))
+          type: new GraphQLList(fieldType.type)
         };
       };
     }
@@ -173,7 +229,7 @@ export function createArgumentParser(
     const query: any = {};
     for (const prop in args) {
       // TODO: fix typings on tyranid
-      const field = (fields[prop] as any).def;
+      const field = <Tyr.TyranidFieldDefinition> (fields[prop] as any).def;
       if ( field.link ||
           (field.is === 'mongoid') ||
           (field.is === 'array' && field.of && field.of.link)) {

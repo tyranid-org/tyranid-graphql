@@ -135,7 +135,7 @@ export function collectionFieldConfig(
        * add to mongodb projection
        */
       if (operation) {
-        project = createProjection(operation);
+        project = createProjection(col, operation);
       }
 
       return queryFunction({
@@ -154,7 +154,10 @@ export function collectionFieldConfig(
  * the current query node from the operation and create
  * a mongodb projection
  */
-export function createProjection(info: GraphQLResolveInfo): any {
+export function createProjection(
+  col: Tyr.CollectionInstance,
+  info: GraphQLResolveInfo
+): any {
   // TODO: PR graphql typings to add path prop
   const path = (info as any).path as string[];
 
@@ -173,11 +176,20 @@ export function createProjection(info: GraphQLResolveInfo): any {
 
   if (!selections || !selections.length) return;
 
+  const collectionFields = col.def.fields;
+  if (!collectionFields) return;
+
   const projection: any = { _id: 1 };
 
   for (const selection of selections) {
-    const field = selection as Field;
-    projection[field.name.value] = 1;
+    const graphQlField = selection as Field;
+    const graphQLFieldName = graphQlField.name.value;
+    const tyrField = collectionFields[graphQLFieldName] as any;
+
+    // computed property found, no projection
+    if (tyrField.def && tyrField.def.get) return;
+
+    projection[graphQLFieldName] = 1;
   }
 
   return projection;
@@ -282,7 +294,7 @@ export function createFieldThunk(
  * given a field object, create an individual GraphQLType instance
  */
 export function createGraphQLFieldConfig(
-  field: Tyr.TyranidFieldDefinition,
+  field: Tyr.TyranidFieldDefinition | string,
   map: GraphQLOutputTypeMap,
   fieldName: string,
   path: string,
@@ -290,8 +302,9 @@ export function createGraphQLFieldConfig(
 ): GraphQLFieldConfig | undefined {
 
   if (typeof field === 'string') {
-    warn(`Ignoring field: "${field}" at path "${path}" as it is a string`);
-    return;
+    return createGraphQLFieldConfig(
+      { is: field }, map, fieldName, path, single
+    );
   }
 
   // TODO: determine why this is necessary

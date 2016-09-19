@@ -116,6 +116,12 @@ export const User = new Tyr.Collection({
   fields: {
     _id: { is: 'mongoid' },
     name: { is: 'string' },
+    computed: {
+      is: 'string',
+      get(this: Tyr.Document) {
+        return `Hello ${this['name']} from a computed property!`;
+      }
+    },
     teamIds: {
       is: 'array',
       of: {

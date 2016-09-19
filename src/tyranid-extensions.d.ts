@@ -7,6 +7,7 @@ declare module 'tyranid' {
 
     export interface TyranidGraphQlQueryOptions {
       query: string;
+      variables?: { [key: string]: any },
       auth?: Tyr.Document;
       perm?: string;
     }
@@ -16,8 +17,6 @@ declare module 'tyranid' {
       schema: GraphQLSchema;
     }
 
-    // add graphql method to tyranid module
-    // TODO: should be strongly typed, returning wrapped docs!
     export let graphql: TyranidGraphQLFunction;
   }
 

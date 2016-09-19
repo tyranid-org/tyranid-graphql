@@ -29,12 +29,13 @@ export function graphqlize(tyr: typeof Tyr) {
   const schema = createGraphQLSchema(tyr);
 
   tyr.graphql = <Tyr.TyranidGraphQLFunction>Object.assign(
-    function ({ query, auth, perm = 'view' }: Tyr.TyranidGraphQlQueryOptions) {
-      return graphql(schema, query, null, {
+    function ({ query, auth, variables, perm = 'view' }: Tyr.TyranidGraphQlQueryOptions) {
+      const context = {
         auth,
-        perm,
-        docCache: {}
-      });
+        perm
+      };
+
+      return graphql(schema, query, null, context, variables);
     },
     { schema }
   );

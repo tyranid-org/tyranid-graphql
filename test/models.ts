@@ -1,5 +1,6 @@
 import { Tyr } from 'tyranid';
 
+
 export const Blog = new Tyr.Collection({
   id: 'b00',
   name: 'blog',
@@ -131,9 +132,26 @@ export const User = new Tyr.Collection({
     nested: {
       is: 'object',
       fields: {
-        inner: { is: 'integer', defaultValue: 1 }
+        inner: { is: 'integer' }
       }
     },
+    status: { link: 'userStatus' },
     organizationId: { link: 'organization' }
   }
+});
+
+
+export const UserStatus = new Tyr.Collection({
+  id: 'u01',
+  name: 'userStatus',
+  enum: true,
+  fields: {
+    _id: { is: 'integer' },
+    name: { is: 'string', labelField: true }
+  },
+  values: [
+    [ '_id', 'name' ],
+    [ 1 , 'Active'  ],
+    [ 2 , 'Deleted' ]
+  ]
 });

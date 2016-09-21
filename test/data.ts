@@ -7,7 +7,8 @@ import {
   Chart,
   Inventory,
   Organization,
-  Comment } from './models';
+  Comment,
+  UserStatus } from './models';
 
 export async function createTestData() {
   // nuke old data...
@@ -73,12 +74,17 @@ export async function createTestData() {
       teamIds: [
         burritoMakers.$id,
         chipotleMarketing.$id
-      ]
+      ],
+      status: (UserStatus as any).ACTIVE._id,
+      nested: {
+        inner: 4
+      }
     });
 
   const ted = await User.insert({
     name: 'ted',
     organizationId: cava.$id,
+    status: (UserStatus as any).ACTIVE._id,
     teamIds: [
       cavaEngineers.$id
     ]
@@ -86,6 +92,7 @@ export async function createTestData() {
 
   User.insert({
     name: 'noTeams',
+    status: (UserStatus as any).DELETED._id,
     organizationId: chipotle.$id
   });
 

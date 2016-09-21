@@ -91,7 +91,10 @@ export function createGraphQLSchema(
 
     // add single and array query fields for collections
     queryFields[name] = collectionFieldConfig(col, typeMap, true);
-    queryFields[name + 's'] = collectionFieldConfig(col, typeMap, false);
+
+    // TODO: less hacky...
+    const suffix = name[name.length - 1] === 's' ? 'es' : 's';
+    queryFields[name + suffix] = collectionFieldConfig(col, typeMap, false);
   });
 
   return new GraphQLSchema({
@@ -119,6 +122,7 @@ export function collectionFieldConfig(
   }
 
   const fields = col.def.fields;
+  const isEnum = col.def.enum;
 
   if (!fields) {
     return error(`Collection "${col.def.name}" has no fields property.`);
@@ -145,6 +149,18 @@ export function collectionFieldConfig(
        * extract query arguments and format for consumption by mongo
        */
       const query = argParser(parent, args);
+
+      if (isEnum) {
+        if (!(args && args['_id'])) {
+          console.log(col.def.values);
+          const ids = (col.def.values || []).map((row: any) => row['_id']);
+          args = { _id: ids };
+        }
+
+        return single
+          ? col.byId(args['_id'][0])
+          : col.byIds(args['_id']);
+      }
 
       // default to full projection
       let project: any;

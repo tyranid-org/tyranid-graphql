@@ -10,7 +10,7 @@ import * as cases from './cases/';
 test.before(async () => {
   const db = await mongodb
     .MongoClient
-    .connect('mongodb://127.0.0.1:27017/tyranid_gracl_test');
+    .connect('mongodb://127.0.0.1:27017/_tyranid_graphql_test');
 
   Tyr.config({
     db: db,

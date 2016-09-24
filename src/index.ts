@@ -74,7 +74,7 @@ function createGraphQLFunction(schema: GraphQLSchema): Tyr.TyranidGraphQLFunctio
       // join template literal with imputed values
       let query = '';
       for (let i = 0, l = q.length; i < l; i++) {
-        query += q[i] + (interpolated[i] || '');
+        query += q[i] + ((i in interpolated) ? interpolated[i] : '');
       }
       return graphql(schema, query);
     } else {

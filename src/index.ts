@@ -51,22 +51,51 @@ function error(
 export function graphqlize(
   tyr: typeof Tyr
 ): void {
-  const schema = createGraphQLSchema(tyr);
+  tyr.graphql = createGraphQLFunction(createGraphQLSchema(tyr));
+}
 
-  tyr.graphql = Object.assign(
-    function ({
-      query,
-      auth,
-      variables,
-      perm = 'view'
-    }: Tyr.TyranidGraphQlQueryOptions) {
+
+
+/**
+ * Given a graphql schema, close over it and return a query function for use
+ * by tyranid.
+ */
+function createGraphQLFunction(schema: GraphQLSchema): Tyr.TyranidGraphQLFunction {
+
+  function runQuery(
+    q: Tyr.TyranidGraphQlQueryOptions | TemplateStringsArray | string,
+    ...interpolated: any[]
+  ) {
+
+    if (typeof q === 'string' || (Array.isArray(q) && !interpolated.length)) {
+      if (Array.isArray(q)) q = q[0] as string;
+      return graphql(schema, q);
+    } else if (Array.isArray(q)) {
+      // join template literal with imputed values
+      let query = '';
+      for (let i = 0, l = q.length; i < l; i++) {
+        query += q[i] + (interpolated[i] || '');
+      }
+      return graphql(schema, query);
+    } else {
+      const {
+        query,
+        auth,
+        variables,
+        perm = 'view'
+      } = q as Tyr.TyranidGraphQlQueryOptions;
+
       const context = {
         auth,
         perm
       };
 
       return graphql(schema, query, null, context, variables);
-    },
+    }
+  }
+
+  return Object.assign(
+    runQuery.bind(Tyr),
     { schema }
   ) as Tyr.TyranidGraphQLFunction;
 }

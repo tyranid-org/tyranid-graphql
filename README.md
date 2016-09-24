@@ -19,21 +19,20 @@ import { graphqlize } from 'tyranid-graphql';
 graphqlize(Tyr); // (synchronous)
 // ...
 
-const results = await Tyr.graphql({
-  query: `
-    query userTeams {
-      users {
-        name
-        teamIds {
-          name,
-          organizationId {
-            name
-          }
+// template tag syntax
+const results = await Tyr.graphql`
+  query userTeams {
+    users {
+      name
+      teamIds {
+        name,
+        organizationId {
+          name
         }
       }
     }
-  `
-});
+  }
+`;
 
 console.log(users[1].teamIds[2].organizationId.name); // => "Chipotle"
 ```

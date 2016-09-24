@@ -7,3 +7,4 @@ export * from './variables';
 export * from './computed-property-projection';
 export * from './fragments';
 export * from './enum-collection';
+export * from './template-tag';

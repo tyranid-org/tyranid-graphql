@@ -13,7 +13,16 @@ declare module 'tyranid' {
     }
 
     export interface TyranidGraphQLFunction {
+
+      // full options object
       (opts: TyranidGraphQlQueryOptions): Promise<GraphQLResult>;
+
+      // just query string
+      (query: string): Promise<GraphQLResult>;
+
+      // template tag
+      (queryString: TemplateStringsArray, ...interpolated: any[]): Promise<GraphQLResult>;
+
       schema: GraphQLSchema;
     }
 

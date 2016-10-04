@@ -60,7 +60,9 @@ export function graphqlize(
  * Given a graphql schema, close over it and return a query function for use
  * by tyranid.
  */
-function createGraphQLFunction(schema: GraphQLSchema): Tyr.TyranidGraphQLFunction {
+function createGraphQLFunction(
+  schema: GraphQLSchema
+): Tyr.TyranidGraphQLFunction {
 
   function runQuery(
     q: Tyr.TyranidGraphQlQueryOptions | TemplateStringsArray | string,
@@ -307,7 +309,10 @@ export function createArguments(
 export function createArgumentParser(
   fields: Tyr.TyranidFieldsObject
 ): (parent: any, args: any) => any {
-  return function (parent: any, args: any) {
+  return function (
+    parent: any,
+    args: any
+  ) {
     if (!args) return {};
 
     const query: any = {};

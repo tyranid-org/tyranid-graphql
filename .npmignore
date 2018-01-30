@@ -1,5 +1,5 @@
-dist-es2015/test
-dist-node4/test
+dist/test
+src
 node_modules
 test
 coverage

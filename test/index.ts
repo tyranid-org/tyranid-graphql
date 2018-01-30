@@ -8,15 +8,17 @@ import { createTestData } from './data';
 import * as cases from './cases/';
 
 test.before(async () => {
-  const db = await mongodb
-    .MongoClient
-    .connect('mongodb://127.0.0.1:27017/_tyranid_graphql_test');
+  const db = await mongodb.MongoClient.connect(
+    'mongodb://127.0.0.1:27017/_tyranid_graphql_test'
+  );
 
   Tyr.config({
     db: db,
     validate: [
-      { dir: __dirname,
-        fileMatch: 'models.js' }
+      {
+        dir: __dirname,
+        fileMatch: 'models.js'
+      }
     ]
   });
 
@@ -24,14 +26,11 @@ test.before(async () => {
   graphqlize(Tyr);
 });
 
-
-type AvaTest = { name: string, fn: (...args: any[]) => Promise<any> };
+type AvaTest = { name: string; fn: (...args: any[]) => Promise<any> };
 
 for (const caseName in cases) {
-  const params = (
-    (cases as any) as {
-      [key: string]: AvaTest
-    }
-  )[caseName];
+  const params = ((cases as any) as {
+    [key: string]: AvaTest;
+  })[caseName];
   test(params.name, params.fn);
 }

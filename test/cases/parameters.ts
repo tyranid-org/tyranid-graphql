@@ -1,13 +1,14 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
+import { ExecutionResult } from 'graphql';
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
-
 
 export const parameters = {
   name: 'Filtering by id parameter should work',
-  fn: async (t: ContextualTestContext) => {
-
-    const ted = await Tyr.byName['user'].findOne({ name: 'ted' });
+  fn: async (t: TestContext) => {
+    const ted = await Tyr.byName.user.findOne({ query: { name: 'ted' } });
+    if (!ted) {
+      throw new Error(`no ted`);
+    }
 
     const query = `
       query userNameQuery {
@@ -26,14 +27,14 @@ export const parameters = {
     const result = await Tyr.graphql({ query });
 
     const expected = {
-      'data': {
-        'user': {
-          'name': 'ted',
-          'teamIds': [
+      data: {
+        user: {
+          name: 'ted',
+          teamIds: [
             {
-              'name': 'cavaEngineers',
-              'organizationId': {
-                'name': 'Cava'
+              name: 'cavaEngineers',
+              organizationId: {
+                name: 'Cava'
               }
             }
           ]
@@ -41,6 +42,6 @@ export const parameters = {
       }
     };
 
-    t.deepEqual<GraphQLResult>(result, expected);
+    t.deepEqual<ExecutionResult>(result, expected);
   }
 };

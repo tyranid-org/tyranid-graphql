@@ -1,32 +1,30 @@
 import { Tyr } from 'tyranid';
-import { GraphQLResult, GraphQLSchema } from 'graphql';
+import { ExecutionResult, GraphQLSchema } from 'graphql';
 
 declare module 'tyranid' {
-
   namespace Tyr {
-
     export interface TyranidGraphQlQueryOptions {
       query: string;
-      variables?: { [key: string]: any },
+      variables?: { [key: string]: any };
       auth?: Tyr.Document;
       perm?: string;
     }
 
     export interface TyranidGraphQLFunction {
-
       // full options object
-      (opts: TyranidGraphQlQueryOptions): Promise<GraphQLResult>;
+      (opts: TyranidGraphQlQueryOptions): Promise<ExecutionResult>;
 
       // just query string
-      (query: string): Promise<GraphQLResult>;
+      (query: string): Promise<ExecutionResult>;
 
       // template tag
-      (queryString: TemplateStringsArray, ...interpolated: any[]): Promise<GraphQLResult>;
+      (queryString: TemplateStringsArray, ...interpolated: any[]): Promise<
+        ExecutionResult
+      >;
 
       schema: GraphQLSchema;
     }
 
     export let graphql: TyranidGraphQLFunction;
   }
-
 }

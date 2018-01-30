@@ -1,6 +1,5 @@
 import { Tyr } from 'tyranid';
 
-
 export const Blog = new Tyr.Collection({
   id: 'b00',
   name: 'blog',
@@ -26,13 +25,16 @@ export const Chart = new Tyr.Collection({
       link: 'blog'
     },
     postIds: {
-      is: 'array', of: { link: 'post' }
+      is: 'array',
+      of: { link: 'post' }
     },
     teamIds: {
-      is: 'array', of: { link: 'team' }
+      is: 'array',
+      of: { link: 'team' }
     },
     userIds: {
-      is: 'array', of: { link: 'user' }
+      is: 'array',
+      of: { link: 'user' }
     }
   }
 });
@@ -64,7 +66,6 @@ export const Inventory = new Tyr.Collection({
   }
 });
 
-
 export const Organization = new Tyr.Collection({
   id: 'o00',
   name: 'organization',
@@ -74,7 +75,6 @@ export const Organization = new Tyr.Collection({
     name: { is: 'string' }
   }
 });
-
 
 export const Post = new Tyr.Collection({
   id: 'p00',
@@ -87,7 +87,6 @@ export const Post = new Tyr.Collection({
     blogId: { link: 'blog' }
   }
 });
-
 
 export const Team = new Tyr.Collection({
   id: 't00',
@@ -119,7 +118,7 @@ export const User = new Tyr.Collection({
     name: { is: 'string' },
     computed: {
       is: 'string',
-      get(this: Tyr.Document) {
+      get(this: Tyr.Document & { name: string }) {
         return `Hello ${this['name']} from a computed property!`;
       }
     },
@@ -140,7 +139,6 @@ export const User = new Tyr.Collection({
   }
 });
 
-
 export const UserStatus = new Tyr.Collection({
   id: 'u01',
   name: 'userStatus',
@@ -149,9 +147,5 @@ export const UserStatus = new Tyr.Collection({
     _id: { is: 'integer' },
     name: { is: 'string', labelField: true }
   },
-  values: [
-    [ '_id', 'name' ],
-    [ 1 , 'Active'  ],
-    [ 2 , 'Deleted' ]
-  ]
+  values: [['_id', 'name'], [1, 'Active'], [2, 'Deleted']]
 });

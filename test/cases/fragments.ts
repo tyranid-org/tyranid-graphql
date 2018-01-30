@@ -1,11 +1,10 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
+import { ExecutionResult } from 'graphql';
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
 
 export const fragments = {
   name: 'Fragments should work',
-  fn: async (t: ContextualTestContext) => {
-
+  fn: async (t: TestContext) => {
     const query = `
       query userQuery {
         user(name: "ben") {
@@ -24,21 +23,21 @@ export const fragments = {
     const result = await Tyr.graphql({ query });
 
     const expected = {
-      'data': {
-        'user': {
-          'name': 'ben',
-          'teamIds': [
+      data: {
+        user: {
+          name: 'ben',
+          teamIds: [
             {
-              'name': 'burritoMakers'
+              name: 'burritoMakers'
             },
             {
-              'name': 'chipotleMarketing'
+              name: 'chipotleMarketing'
             }
           ]
         }
       }
     };
 
-    t.deepEqual<GraphQLResult>(result, expected);
+    t.deepEqual<ExecutionResult>(result, expected);
   }
 };

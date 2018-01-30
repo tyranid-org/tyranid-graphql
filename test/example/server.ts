@@ -1,21 +1,23 @@
-import { Tyr } from 'tyranid';
-import * as express from 'express';
-import * as mongodb from 'mongodb';
 import * as bodyParser from 'body-parser';
-import { apolloExpress, graphiqlExpress } from 'apollo-server';
-import { createTestData } from '../data';
+import * as express from 'express';
+import { graphiqlExpress, graphqlExpress } from 'graphql-server-express';
+import * as mongodb from 'mongodb';
+import { Tyr } from 'tyranid';
 import { createGraphQLSchema } from '../../src/';
+import { createTestData } from '../data';
 
 (async () => {
-  const db = await mongodb
-    .MongoClient
-    .connect('mongodb://127.0.0.1:27017/tyranid_gracl_test');
+  const db = await mongodb.MongoClient.connect(
+    'mongodb://127.0.0.1:27017/tyranid_gracl_test'
+  );
 
   Tyr.config({
-    db: db,
+    db,
     validate: [
-      { dir: __dirname,
-        fileMatch: 'models.js' }
+      {
+        dir: __dirname,
+        fileMatch: 'models.js'
+      }
     ]
   });
 
@@ -25,16 +27,25 @@ import { createGraphQLSchema } from '../../src/';
 
   const graphQLServer = express();
 
-  graphQLServer.use('/graphql', bodyParser.json(), apolloExpress({
-    schema: createGraphQLSchema(Tyr)
-  }));
+  graphQLServer.use(
+    '/graphql',
+    bodyParser.json(),
+    graphqlExpress({
+      schema: createGraphQLSchema(Tyr)
+    })
+  );
 
-  graphQLServer.use('/graphiql', graphiqlExpress({
-    endpointURL: '/graphql',
-  }));
+  graphQLServer.use(
+    '/graphiql',
+    graphiqlExpress({
+      endpointURL: '/graphql'
+    })
+  );
 
-  graphQLServer.listen(GRAPHQL_PORT, () => console.log(
-    `GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}/graphiql`
-  ));
-
-})().catch(err => console.log(err.stack));
+  /* tslint:disable no-console */
+  graphQLServer.listen(GRAPHQL_PORT, () =>
+    console.log(
+      `GraphQL Server is now running on http://localhost:${GRAPHQL_PORT}/graphiql`
+    )
+  );
+})().catch(err => console.log(err.stack)); /* tslint:enable no-console */

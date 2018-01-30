@@ -1,13 +1,14 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
+import { ExecutionResult } from 'graphql';
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
-
 
 export const variables = {
   name: 'Using a query function with variables should succeed',
-  fn: async (t: ContextualTestContext) => {
-
-    const ted = await Tyr.byName['user'].findOne({ name: 'ted' });
+  fn: async (t: TestContext) => {
+    const ted = await Tyr.byName.user.findOne({ query: { name: 'ted' } });
+    if (!ted) {
+      throw new Error(`No ted`);
+    }
 
     const query = `
       query getUserById($id: [ID]) {
@@ -31,14 +32,14 @@ export const variables = {
     });
 
     const expected = {
-      'data': {
-        'user': {
-          'name': 'ted',
-          'teamIds': [
+      data: {
+        user: {
+          name: 'ted',
+          teamIds: [
             {
-              'name': 'cavaEngineers',
-              'organizationId': {
-                'name': 'Cava'
+              name: 'cavaEngineers',
+              organizationId: {
+                name: 'Cava'
               }
             }
           ]
@@ -46,6 +47,6 @@ export const variables = {
       }
     };
 
-    t.deepEqual<GraphQLResult>(result, expected);
+    t.deepEqual<ExecutionResult>(result, expected);
   }
 };

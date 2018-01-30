@@ -1,4 +1,8 @@
 {
+  "extends": [
+    "tslint:latest",
+    "tslint-config-prettier"
+  ],
   "rules": {
     "class-name": true,
     "comment-format": [
@@ -20,6 +24,8 @@
       "check-open-brace",
       "check-whitespace"
     ],
+    "object-literal-sort-keys": false,
+    "no-implicit-dependencies": false,
     "quotemark": [
       true,
       "single"

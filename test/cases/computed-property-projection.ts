@@ -1,11 +1,10 @@
 import { TestContext } from 'ava';
+import { ExecutionResult } from 'graphql';
 import { Tyr } from 'tyranid';
-import {  ExecutionResult } from 'graphql';
 
 export const computedPropertyProjection = {
   name: 'Query of doc with computed property should ignore projection',
   fn: async (t: TestContext) => {
-
     const query = `
       query userNameQuery {
         users(name: "ben") {
@@ -17,15 +16,15 @@ export const computedPropertyProjection = {
     const result = await Tyr.graphql({ query });
 
     const expected = {
-      'data': {
-        'users': [
+      data: {
+        users: [
           {
-            'computed': 'Hello ben from a computed property!'
+            computed: 'Hello ben from a computed property!'
           }
         ]
       }
     };
 
-    t.deepEqual< ExecutionResult>(result, expected);
+    t.deepEqual<ExecutionResult>(result, expected);
   }
 };

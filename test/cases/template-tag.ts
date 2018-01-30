@@ -1,11 +1,10 @@
 import { TestContext } from 'ava';
+import { ExecutionResult } from 'graphql';
 import { Tyr } from 'tyranid';
-import {  ExecutionResult } from 'graphql';
 
 export const templateTag = {
   name: 'Template tag syntax with computed properties should work',
   fn: async (t: TestContext) => {
-
     const orgId = 'organizationId';
     const gql = Tyr.graphql;
 
@@ -21,30 +20,30 @@ export const templateTag = {
     `;
 
     const expected = {
-      'data': {
-        'users': [
+      data: {
+        users: [
           {
-            'name': 'ben',
-            'organizationId': {
-              'name': 'Chipotle'
+            name: 'ben',
+            organizationId: {
+              name: 'Chipotle'
             }
           },
           {
-            'name': 'ted',
-            'organizationId': {
-              'name': 'Cava'
+            name: 'ted',
+            organizationId: {
+              name: 'Cava'
             }
           },
           {
-            'name': 'noTeams',
-            'organizationId': {
-              'name': 'Chipotle'
+            name: 'noTeams',
+            organizationId: {
+              name: 'Chipotle'
             }
           }
         ]
       }
     };
 
-    t.deepEqual< ExecutionResult>(result, expected);
+    t.deepEqual<ExecutionResult>(result, expected);
   }
 };

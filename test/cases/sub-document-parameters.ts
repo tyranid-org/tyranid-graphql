@@ -1,14 +1,16 @@
 import { TestContext } from 'ava';
+import { ExecutionResult } from 'graphql';
 import { Tyr } from 'tyranid';
-import {  ExecutionResult } from 'graphql';
-
 
 export const subDocumentParameters = {
   name: 'Filtering by sub document parameter should work',
   fn: async (t: TestContext) => {
-
-    const burritoMakers = await Tyr.byName['team'].findOne({ query: { name: 'burritoMakers' } });
-    if (!burritoMakers) throw new Error(`No burrito`);
+    const burritoMakers = await Tyr.byName.team.findOne({
+      query: { name: 'burritoMakers' }
+    });
+    if (!burritoMakers) {
+      throw new Error(`No burrito`);
+    }
 
     const query = `
       query userNameQuery {
@@ -27,31 +29,31 @@ export const subDocumentParameters = {
     const result = await Tyr.graphql({ query });
 
     const expected = {
-      'data': {
-        'users': [
+      data: {
+        users: [
           {
-            'name': 'ben',
-            'teamIds': [
+            name: 'ben',
+            teamIds: [
               {
-                'name': 'burritoMakers',
-                'organizationId': {
-                  'name': 'Chipotle'
+                name: 'burritoMakers',
+                organizationId: {
+                  name: 'Chipotle'
                 }
               }
             ]
           },
           {
-            'name': 'ted',
-            'teamIds': []
+            name: 'ted',
+            teamIds: []
           },
           {
-            'name': 'noTeams',
-            'teamIds': []
+            name: 'noTeams',
+            teamIds: []
           }
         ]
       }
     };
 
-    t.deepEqual< ExecutionResult>(result, expected);
+    t.deepEqual<ExecutionResult>(result, expected);
   }
 };

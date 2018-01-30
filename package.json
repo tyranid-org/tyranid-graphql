@@ -36,10 +36,5 @@
     "files": [
       "dist/test/index.js"
     ]
-  },
-  "nyc": {
-    "include": [
-      "dist/src"
-    ]
   }
 }

@@ -1,6 +1,6 @@
 import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
+import {  ExecutionResult } from 'graphql';
 
 export const templateTag = {
   name: 'Template tag syntax with computed properties should work',
@@ -45,6 +45,6 @@ export const templateTag = {
       }
     };
 
-    t.deepEqual<GraphQLResult>(result, expected);
+    t.deepEqual< ExecutionResult>(result, expected);
   }
 };

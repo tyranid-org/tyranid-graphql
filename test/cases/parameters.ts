@@ -1,6 +1,6 @@
 import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
+import {  ExecutionResult } from 'graphql';
 
 
 export const parameters = {
@@ -42,6 +42,6 @@ export const parameters = {
       }
     };
 
-    t.deepEqual<GraphQLResult>(result, expected);
+    t.deepEqual< ExecutionResult>(result, expected);
   }
 };

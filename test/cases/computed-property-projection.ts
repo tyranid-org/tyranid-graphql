@@ -1,6 +1,6 @@
 import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
+import {  ExecutionResult } from 'graphql';
 
 export const computedPropertyProjection = {
   name: 'Query of doc with computed property should ignore projection',
@@ -26,6 +26,6 @@ export const computedPropertyProjection = {
       }
     };
 
-    t.deepEqual<GraphQLResult>(result, expected);
+    t.deepEqual< ExecutionResult>(result, expected);
   }
 };

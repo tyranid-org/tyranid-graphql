@@ -13,13 +13,11 @@ import {
   GraphQLFloat,
   GraphQLFieldConfigMap,
   GraphQLFieldConfig,
-  GraphQLFieldConfigMapThunk,
+  Thunk,
   GraphQLList,
   GraphQLFieldConfigArgumentMap,
   GraphQLResolveInfo,
-  Selection,
-  Field,
-  FragmentSpread,
+  FieldNode, FragmentSpreadNode, InlineFragmentNode,
   isLeafType
 } from 'graphql';
 
@@ -108,7 +106,7 @@ export function createGraphQLSchema(
   tyr: typeof Tyr
 ): GraphQLSchema {
   const typeMap: GraphQLOutputTypeMap = new Map();
-  const queryFields: GraphQLFieldConfigMap = {};
+  const queryFields: GraphQLFieldConfigMap<any, any> = {};
 
   tyr.collections.forEach(col => {
     const name = col.def.name;
@@ -145,7 +143,7 @@ export function collectionFieldConfig(
   col: Tyr.CollectionInstance,
   map: GraphQLOutputTypeMap,
   single = true
-): GraphQLFieldConfig {
+): GraphQLFieldConfig<any, any> {
   const colGraphQLType = map.get(col.def.name);
 
   if (!colGraphQLType) {
@@ -225,19 +223,19 @@ export function createProjection(
 ): any {
 
   const projection: any = { _id: 1 };
-  const ast = (info as any).fieldNodes[0]; // typings are incorrect
+  const ast = info.fieldNodes[0];
   const collectionFields = col && col.def && col.def.fields;
   const selections = ast.selectionSet && ast.selectionSet.selections.slice();
 
   if (!collectionFields || !selections || !selections.length) return;
 
-  let selection: Selection | undefined;
+  let selection: FieldNode | FragmentSpreadNode | InlineFragmentNode | undefined;
   while (selection = selections.shift()) {
 
     switch (selection.kind) {
 
       case 'Field': {
-        const graphQlField = selection as Field;
+        const graphQlField = selection as FieldNode;
         const graphQLFieldName = graphQlField.name.value;
         const tyrField = collectionFields[graphQLFieldName] as any;
 
@@ -252,7 +250,7 @@ export function createProjection(
        * For fragments, add selection set to array and continue
        */
       case 'FragmentSpread': {
-        const fragmentSpread = selection as FragmentSpread;
+        const fragmentSpread = selection as FragmentSpreadNode;
         const fragment = info.fragments[fragmentSpread.name.value];
         selections.push(...fragment.selectionSet.selections);
         break;
@@ -345,9 +343,9 @@ export function createFieldThunk(
   fields: { [key: string]: Tyr.FieldInstance },
   map: GraphQLOutputTypeMap,
   path = ''
-): GraphQLFieldConfigMapThunk {
+): Thunk<GraphQLFieldConfigMap<any, any>> {
   return function () {
-    const fieldsObj: GraphQLFieldConfigMap = {};
+    const fieldsObj: GraphQLFieldConfigMap<any, any> = {};
 
     if (!fields) return error(`No fields given to createFieldThunk!`);
 
@@ -381,7 +379,7 @@ export function createGraphQLFieldConfig(
   fieldName: string,
   path: string,
   single: boolean
-): GraphQLFieldConfig | undefined {
+): GraphQLFieldConfig<any, any> | undefined {
 
   const def = typeof field === 'string' ? undefined : field.def;
   const is = typeof field === 'string' ?  field : (def && def.is);

@@ -2,7 +2,7 @@ import { Tyr } from 'tyranid';
 import * as express from 'express';
 import * as mongodb from 'mongodb';
 import * as bodyParser from 'body-parser';
-import { apolloExpress, graphiqlExpress } from 'apollo-server';
+import { graphqlExpress, graphiqlExpress } from 'graphql-server-express';
 import { createTestData } from '../data';
 import { createGraphQLSchema } from '../../src/';
 
@@ -25,7 +25,7 @@ import { createGraphQLSchema } from '../../src/';
 
   const graphQLServer = express();
 
-  graphQLServer.use('/graphql', bodyParser.json(), apolloExpress({
+  graphQLServer.use('/graphql', bodyParser.json(), graphqlExpress({
     schema: createGraphQLSchema(Tyr)
   }));
 

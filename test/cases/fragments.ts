@@ -1,6 +1,6 @@
 import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
-import { GraphQLResult } from 'graphql';
+import {  ExecutionResult } from 'graphql';
 
 export const fragments = {
   name: 'Fragments should work',
@@ -39,6 +39,6 @@ export const fragments = {
       }
     };
 
-    t.deepEqual<GraphQLResult>(result, expected);
+    t.deepEqual< ExecutionResult>(result, expected);
   }
 };

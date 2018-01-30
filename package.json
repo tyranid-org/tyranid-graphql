@@ -11,7 +11,9 @@
     "prepublish": "npm run test",
     "test": "ava",
     "tsc": "tsc -d",
-    "lint": "npm run prettier && tslint -p ./ --fix -c ./tslint.json ./{test,lib}/**/*.ts && echo '> \\033[0;32mlinter passed!\\033[0m'"
+    "watch": "tsc -w",
+    "lint":
+      "npm run prettier && tslint -p ./ --fix -c ./tslint.json ./{test,lib}/**/*.ts && echo '> \\033[0;32mlinter passed!\\033[0m'"
   },
   "author": "bsouthga@gmail.com",
   "license": "Apache-2.0",
@@ -36,8 +38,6 @@
     "graphql": "^0.12.3"
   },
   "ava": {
-    "files": [
-      "dist/test/index.js"
-    ]
+    "files": ["dist/test/index.js"]
   }
 }

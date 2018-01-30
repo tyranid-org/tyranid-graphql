@@ -1,32 +1,32 @@
-import { Tyr } from 'tyranid';
 import { ObjectID } from 'mongodb';
+import { Tyr } from 'tyranid';
 
 import {
-  graphql,
-  GraphQLOutputType,
-  GraphQLBoolean,
-  GraphQLString,
-  GraphQLObjectType,
-  GraphQLSchema,
-  GraphQLInt,
-  GraphQLID,
-  GraphQLFloat,
-  GraphQLFieldConfigMap,
-  GraphQLFieldConfig,
-  Thunk,
-  GraphQLList,
-  GraphQLFieldConfigArgumentMap,
-  GraphQLResolveInfo,
   FieldNode,
   FragmentSpreadNode,
+  graphql,
+  GraphQLBoolean,
+  GraphQLFieldConfig,
+  GraphQLFieldConfigArgumentMap,
+  GraphQLFieldConfigMap,
+  GraphQLFloat,
+  GraphQLID,
+  GraphQLInt,
+  GraphQLList,
+  GraphQLObjectType,
+  GraphQLOutputType,
+  GraphQLResolveInfo,
+  GraphQLSchema,
+  GraphQLString,
   InlineFragmentNode,
-  isLeafType
+  isLeafType,
+  Thunk
 } from 'graphql';
 
 export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
 
 function warn(message: string) {
-  console.warn(`tyranid-graphql: WARNING -- ${message}`);
+  console.warn(`tyranid-graphql: WARNING -- ${message}`); // tslint:disable-line
 }
 
 function error(message: string): never {
@@ -53,7 +53,9 @@ function createGraphQLFunction(
     ...interpolated: any[]
   ) {
     if (typeof q === 'string' || (Array.isArray(q) && !interpolated.length)) {
-      if (Array.isArray(q)) q = q[0] as string;
+      if (Array.isArray(q)) {
+        q = q[0] as string;
+      }
       return graphql(schema, q);
     } else if (Array.isArray(q)) {
       // join template literal with imputed values
@@ -90,9 +92,11 @@ export function createGraphQLSchema(tyr: typeof Tyr): GraphQLSchema {
 
   tyr.collections.forEach(col => {
     const name = col.def.name;
-    if (!col.def.fields) return error(`Collection "${name}" has no fields!`);
+    if (!col.def.fields) {
+      return error(`Collection "${name}" has no fields!`);
+    }
 
-    const fields = createFieldThunk(col.def.fields, typeMap, `${name}_`);
+    const fields = createFieldThunk(col.def.fields, typeMap, name);
 
     const colGraphQLType = new GraphQLObjectType({ name, fields });
 
@@ -149,19 +153,21 @@ export function collectionFieldConfig(
   return {
     args,
     type,
-    resolve(parent, args, context, operation) {
+    resolve(parent, resolveArgs, context, operation) {
       /**
        * extract query arguments and format for consumption by mongo
        */
-      const query = argParser(parent, args);
+      const query = argParser(parent, resolveArgs);
 
       if (isEnum) {
-        if (!(args && args['_id'])) {
-          const ids = (col.def.values || []).map((row: any) => row['_id']);
-          args = { _id: ids };
+        if (!(resolveArgs && resolveArgs._id)) {
+          const ids = (col.def.values || []).map((row: any) => row._id);
+          resolveArgs = { _id: ids };
         }
 
-        return single ? col.byId(args['_id'][0]) : col.byIds(args['_id']);
+        return single
+          ? col.byId(resolveArgs._id[0])
+          : col.byIds(resolveArgs._id);
       }
 
       // default to full projection
@@ -199,7 +205,9 @@ export function createProjection(
   const collectionFields = col && col.def && col.def.fields;
   const selections = ast.selectionSet && ast.selectionSet.selections.slice();
 
-  if (!collectionFields || !selections || !selections.length) return;
+  if (!collectionFields || !selections || !selections.length) {
+    return;
+  }
 
   let selection:
     | FieldNode
@@ -214,7 +222,9 @@ export function createProjection(
         const tyrField = collectionFields[graphQLFieldName] as any;
 
         // computed property found, no projection
-        if (tyrField.def && tyrField.def.get) return;
+        if (tyrField.def && tyrField.def.get) {
+          return;
+        }
 
         projection[graphQLFieldName] = 1;
         break;
@@ -245,29 +255,31 @@ export function createArguments(
   const argMap: GraphQLFieldConfigArgumentMap = {};
 
   for (const fieldName in fields) {
-    const field = fields[fieldName];
-    const def = field.def;
+    if (fields.hasOwnProperty(fieldName)) {
+      const field = fields[fieldName];
+      const def = field.def;
 
-    if (def.is && def.is !== 'object' && def.is !== 'array') {
-      const fieldType = createGraphQLFieldConfig(
-        field,
-        map,
-        fieldName,
-        '',
-        true
-      );
+      if (def.is && def.is !== 'object' && def.is !== 'array') {
+        const fieldType = createGraphQLFieldConfig(
+          field,
+          map,
+          fieldName,
+          '',
+          true
+        );
 
-      if (fieldType && isLeafType(fieldType.type)) {
+        if (fieldType && isLeafType(fieldType.type)) {
+          argMap[fieldName] = {
+            type: new GraphQLList(fieldType.type)
+          };
+        }
+      }
+
+      if (def.link || (def.is === 'array' && def.of && def.of.link)) {
         argMap[fieldName] = {
-          type: new GraphQLList(fieldType.type)
+          type: new GraphQLList(GraphQLID)
         };
       }
-    }
-
-    if (def.link || (def.is === 'array' && def.of && def.of.link)) {
-      argMap[fieldName] = {
-        type: new GraphQLList(GraphQLID)
-      };
     }
   }
   return argMap;
@@ -279,25 +291,29 @@ export function createArguments(
 export function createArgumentParser(fields: {
   [key: string]: Tyr.FieldInstance;
 }): (parent: any, args: any) => any {
-  return function(parent: any, args: any) {
-    if (!args) return {};
+  return (parent: any, args: any) => {
+    if (!args) {
+      return {};
+    }
 
     const query: any = {};
     for (const prop in args) {
-      // TODO: fix typings on tyranid
-      const field = (fields[prop] as any).def as Tyr.FieldDefinition;
-      if (
-        field.link ||
-        field.is === 'mongoid' ||
-        (field.is === 'array' && field.of && field.of.link)
-      ) {
-        query[prop] = {
-          $in: [].concat(args[prop]).map((id: any) => new ObjectID(id))
-        };
-      } else {
-        query[prop] = {
-          $in: args[prop]
-        };
+      if (args.hasOwnProperty(prop)) {
+        // TODO: fix typings on tyranid
+        const field = (fields[prop] as any).def as Tyr.FieldDefinition;
+        if (
+          field.link ||
+          field.is === 'mongoid' ||
+          (field.is === 'array' && field.of && field.of.link)
+        ) {
+          query[prop] = {
+            $in: [].concat(args[prop]).map((id: any) => new ObjectID(id))
+          };
+        } else {
+          query[prop] = {
+            $in: args[prop]
+          };
+        }
       }
     }
 
@@ -314,29 +330,40 @@ export function createFieldThunk(
   map: GraphQLOutputTypeMap,
   path = ''
 ): Thunk<GraphQLFieldConfigMap<any, any>> {
-  return function() {
+  return () => {
     const fieldsObj: GraphQLFieldConfigMap<any, any> = {};
 
-    if (!fields) return error(`No fields given to createFieldThunk!`);
+    if (!fields) {
+      return error(`No fields given to createFieldThunk!`);
+    }
 
     let hasFields = false;
     for (const fieldName in fields) {
-      hasFields = true;
-      const field = fields[fieldName];
-      const fieldConfig = createGraphQLFieldConfig(
-        field,
-        map,
-        fieldName,
-        `${path}${fieldName}`,
-        true
-      );
-      if (fieldConfig) {
-        fieldsObj[fieldName] = fieldConfig;
+      if (fields.hasOwnProperty(fieldName)) {
+        const field = fields[fieldName];
+        const shouldSkipField = shouldSkip(field, extendPath(path, fieldName));
+        if (shouldSkipField) {
+          warn(`Skipping field = ${fieldName} at path = ${path}`);
+        } else {
+          hasFields = true;
+
+          const fieldConfig = createGraphQLFieldConfig(
+            field,
+            map,
+            fieldName,
+            extendPath(path, fieldName),
+            true
+          );
+          if (fieldConfig) {
+            fieldsObj[fieldName] = fieldConfig;
+          }
+        }
       }
     }
 
-    if (!hasFields)
+    if (!hasFields) {
       return error(`path "${path}" has no entries in its fields object!`);
+    }
 
     return fieldsObj;
   };
@@ -365,13 +392,16 @@ export function createGraphQLFieldConfig(
     const link = def.link.replace(/\?$/g, '');
     const col = Tyr.byName[link];
 
-    if (!col) throw new Error(`No collection found for link type = ${link}`);
+    if (!col) {
+      throw new Error(`No collection found for link type = ${link}`);
+    }
 
     const linkType = collectionFieldConfig(col, map, single);
     const colFields = col.def.fields;
 
-    if (!colFields)
+    if (!colFields) {
       return error(`No fields found for collection ${col.def.name}`);
+    }
 
     return {
       type: linkType.type,
@@ -380,7 +410,9 @@ export function createGraphQLFieldConfig(
         const linkField = parent[fieldName];
         args = args || {};
 
-        if (!linkField) return single ? null : [];
+        if (!linkField) {
+          return single ? null : [];
+        }
 
         if (!linkType.resolve) {
           return error(
@@ -391,18 +423,18 @@ export function createGraphQLFieldConfig(
         const linkIds = [].concat(linkField);
         const linkArgs: any = {};
 
-        if (args['_id']) {
-          const argIds = (Array.isArray(args['_id'])
-            ? args['_id']
-            : [args['_id']]) as string[];
+        if (args._id) {
+          const argIds = (Array.isArray(args._id)
+            ? args._id
+            : [args._id]) as string[];
 
           const argIdSet = new Set(argIds);
 
-          linkArgs['_id'] = linkIds.filter((id: any) =>
+          linkArgs._id = linkIds.filter((id: any) =>
             argIdSet.has(id.toString())
           );
         } else {
-          linkArgs['_id'] = linkIds;
+          linkArgs._id = linkIds;
         }
 
         return linkType.resolve(parent, linkArgs, context, info);
@@ -447,12 +479,7 @@ export function createGraphQLFieldConfig(
       };
 
     case 'array': {
-      if (typeof field === 'string') {
-        warn(`Ignoring field at path "${path}" as it has no field.of property`);
-        return;
-      }
-
-      if (!field.of) {
+      if (typeof field === 'string' || !field.of) {
         return error(`No field.of for array field: "${path}"`);
       }
 
@@ -460,13 +487,12 @@ export function createGraphQLFieldConfig(
         field.of,
         map,
         fieldName,
-        `${path}_`,
+        path,
         false
       );
 
       if (!subtype) {
-        warn(`Ignoring field at path "${path}" as it has no field.of property`);
-        return;
+        return error(`No field.of for array field subtype at path: "${path}"`);
       }
 
       if (isLeafType(subtype.type)) {
@@ -484,28 +510,23 @@ export function createGraphQLFieldConfig(
 
     case 'object': {
       if (typeof field === 'string') {
-        warn(
-          `Ignoring field at path "${path}" as it has no field.fields property`
-        );
-        return;
+        return error(`object field at path "${path}" has no schema`);
       }
 
       const fields = field.fields;
 
       if (!fields) {
-        warn(`Ignoring object field at path "${path}" as it has no schema`);
-        return;
+        return error(`object field at path "${path}" has no schema`);
       }
 
-      const defFields = createFieldThunk(fields, map, `${path}_`);
+      const defFields = createFieldThunk(fields, map, path);
 
       if (!defFields) {
-        warn(`Ignoring object field at path "${path}" as it has no schema`);
-        return;
+        return error(`object field at path "${path}" has no schema`);
       }
 
       const type = new GraphQLObjectType({
-        name: `${path}_${fieldName}`,
+        name: extendPath(path, fieldName),
         fields: defFields
       });
 
@@ -514,7 +535,73 @@ export function createGraphQLFieldConfig(
       };
     }
 
-    default:
-      return error(`Unable to map type "${is}" for field at path "${path}"`);
+    default: {
+      return error(
+        `Unable to map type "${is}" for field at fieldName: ${fieldName} path "${path}"`
+      );
+    }
   }
+}
+
+const shouldSkipCache: { [key: string]: boolean | undefined } = {};
+
+/**
+ * mark objects and properties we need to exclude from the schema,
+ * as they are ill defined
+ *
+ * note that we need to determine if we should skip before creation of the thunk
+ */
+function shouldSkip(field: Tyr.FieldInstance | string, path: string) {
+  if (path in shouldSkipCache) {
+    return !!shouldSkipCache[path];
+  }
+
+  const result = (shouldSkipCache[path] = shouldSkipHelper(field, path));
+
+  return result;
+}
+
+/**
+ * recursion helper
+ *
+ * @param field
+ * @param path
+ */
+function shouldSkipHelper(
+  field: Tyr.FieldInstance | string,
+  path: string
+): boolean {
+  if (typeof field === 'string') {
+    return field === 'object' || field === 'array';
+  }
+
+  switch (field.def.is) {
+    case 'object': {
+      const subFields = field.fields;
+      if (!subFields) {
+        return true;
+      } else {
+        return Object.keys(subFields).every(sub =>
+          shouldSkip(subFields[sub], extendPath(path, sub))
+        );
+      }
+    }
+
+    case 'array': {
+      const of = field.of;
+      if (!of) {
+        return true;
+      } else {
+        return shouldSkip(of, extendPath(path, '_'));
+      }
+    }
+
+    default: {
+      return false;
+    }
+  }
+}
+
+function extendPath(path: string, next: string) {
+  return `${path}_${next}`;
 }

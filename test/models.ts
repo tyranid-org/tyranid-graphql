@@ -119,7 +119,7 @@ export const User = new Tyr.Collection({
     computed: {
       is: 'string',
       get(this: Tyr.Document & { name: string }) {
-        return `Hello ${this['name']} from a computed property!`;
+        return `Hello ${this.name} from a computed property!`;
       }
     },
     teamIds: {
@@ -131,7 +131,19 @@ export const User = new Tyr.Collection({
     nested: {
       is: 'object',
       fields: {
-        inner: { is: 'integer' }
+        inner: { is: 'integer' },
+        innerIllDefined: {
+          is: 'object'
+        }
+      }
+    },
+    illDefined: {
+      is: 'object'
+    },
+    noValidFields: {
+      is: 'object',
+      fields: {
+        invalidField: { is: 'object' }
       }
     },
     status: { link: 'userStatus' },

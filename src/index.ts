@@ -26,6 +26,9 @@ import {
 export type GraphQLOutputTypeMap = Map<string, GraphQLOutputType>;
 
 function warn(message: string) {
+  if (!process.env.DEBUG) {
+    return;
+  }
   console.warn(`tyranid-graphql: WARNING -- ${message}`); // tslint:disable-line
 }
 
@@ -388,6 +391,8 @@ export function createGraphQLFieldConfig(
   const wrap = (type: GraphQLOutputType) =>
     single ? type : new GraphQLList(type);
 
+  const note = def && def.note;
+
   if (def && def.link) {
     const link = def.link.replace(/\?$/g, '');
     const col = Tyr.byName[link];
@@ -455,27 +460,32 @@ export function createGraphQLFieldConfig(
     case 'date':
     case 'uid':
       return {
-        type: wrap(GraphQLString)
+        type: wrap(GraphQLString),
+        description: note
       };
 
     case 'boolean':
       return {
-        type: wrap(GraphQLBoolean)
+        type: wrap(GraphQLBoolean),
+        description: note
       };
 
     case 'double':
       return {
-        type: wrap(GraphQLFloat)
+        type: wrap(GraphQLFloat),
+        description: note
       };
 
     case 'integer':
       return {
-        type: wrap(GraphQLInt)
+        type: wrap(GraphQLInt),
+        description: note
       };
 
     case 'mongoid':
       return {
-        type: wrap(GraphQLID)
+        type: wrap(GraphQLID),
+        description: note
       };
 
     case 'array': {
@@ -497,13 +507,15 @@ export function createGraphQLFieldConfig(
 
       if (isLeafType(subtype.type)) {
         return {
-          type: subtype.type
+          type: subtype.type,
+          description: note
         };
       } else {
         return {
           type: subtype.type,
           args: subtype.args,
-          resolve: subtype.resolve
+          resolve: subtype.resolve,
+          description: note
         };
       }
     }
@@ -527,7 +539,8 @@ export function createGraphQLFieldConfig(
 
       const type = new GraphQLObjectType({
         name: extendPath(path, fieldName),
-        fields: defFields
+        fields: defFields,
+        description: note
       });
 
       return {

@@ -17,6 +17,7 @@
   "devDependencies": {
     "@types/body-parser": "1.16.8",
     "@types/express": "^4.11.0",
+    "@types/graphql": "^0.12.3",
     "@types/mongodb": "2.2.7",
     "apollo-server": "^0.2.8",
     "ava": "^0.25.0",
@@ -25,12 +26,11 @@
     "graphql-tools": "^0.7.2",
     "mongodb": "^2.2.33",
     "tslint": "^5.9.1",
-    "typed-graphql": "^1.0.2",
     "typescript": "^2.6.2",
     "tyranid": "^0.4.40"
   },
   "dependencies": {
-    "graphql": "^0.7.0"
+    "graphql": "^0.12.3"
   },
   "ava": {
     "files": [

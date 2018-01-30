@@ -225,7 +225,7 @@ export function createProjection(
 ): any {
 
   const projection: any = { _id: 1 };
-  const ast = info.fieldASTs[0];
+  const ast = (info as any).fieldNodes[0]; // typings are incorrect
   const collectionFields = col && col.def && col.def.fields;
   const selections = ast.selectionSet && ast.selectionSet.selections.slice();
 

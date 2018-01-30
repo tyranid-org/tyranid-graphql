@@ -30,7 +30,7 @@
     "tyranid": "^0.4.39"
   },
   "dependencies": {
-    "graphql": "^0.7.0"
+    "graphql": "^0.12.3"
   },
   "ava": {
     "files": [

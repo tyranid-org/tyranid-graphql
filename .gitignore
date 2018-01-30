@@ -1,5 +1,5 @@
 node_modules
-dist-es2015
-dist-node4
+dist*
+
 npm-debug.log
 .nyc_output

@@ -119,7 +119,7 @@ export const User = new Tyr.Collection({
     name: { is: 'string' },
     computed: {
       is: 'string',
-      get(this: Tyr.Document) {
+      get(this: Tyr.Document & { name: string }) {
         return `Hello ${this['name']} from a computed property!`;
       }
     },

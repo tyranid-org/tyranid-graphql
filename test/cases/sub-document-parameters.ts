@@ -1,13 +1,14 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
 import { GraphQLResult } from 'graphql';
 
 
 export const subDocumentParameters = {
   name: 'Filtering by sub document parameter should work',
-  fn: async (t: ContextualTestContext) => {
+  fn: async (t: TestContext) => {
 
-    const burritoMakers = await Tyr.byName['team'].findOne({ name: 'burritoMakers' });
+    const burritoMakers = await Tyr.byName['team'].findOne({ query: { name: 'burritoMakers' } });
+    if (!burritoMakers) throw new Error(`No burrito`);
 
     const query = `
       query userNameQuery {

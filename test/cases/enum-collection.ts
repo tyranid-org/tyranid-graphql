@@ -1,13 +1,14 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
 import { GraphQLResult } from 'graphql';
 
 
 export const enumCollection = {
   name: 'populating an enum collection should succeed',
-  fn: async (t: ContextualTestContext) => {
+  fn: async (t: TestContext) => {
 
-    const ted = await Tyr.byName['user'].findOne({ name: 'ted' });
+    const ted = await Tyr.byName['user'].findOne({ query: { name: 'ted' } });
+    if (!ted) throw new Error(`No ted found`);
 
     const query = `
       query getUserById($id: [ID]) {

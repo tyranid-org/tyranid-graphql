@@ -1,10 +1,10 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
 import { GraphQLResult } from 'graphql';
 
 export const computedPropertyProjection = {
   name: 'Query of doc with computed property should ignore projection',
-  fn: async (t: ContextualTestContext) => {
+  fn: async (t: TestContext) => {
 
     const query = `
       query userNameQuery {

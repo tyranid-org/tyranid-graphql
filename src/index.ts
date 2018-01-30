@@ -271,16 +271,17 @@ export function createProjection(
  * map properties of collections to argumements
  */
 export function createArguments(
-  fields: Tyr.TyranidFieldsObject,
+  fields: {[key: string]: Tyr.FieldInstance},
   map: GraphQLOutputTypeMap
 ) {
   const argMap: GraphQLFieldConfigArgumentMap = {};
 
   for (const fieldName in fields) {
-    // TODO: why do we need to grab def again?
-    const field = (fields[fieldName] as any).def as Tyr.TyranidFieldDefinition;
 
-    if (field.is && (field.is !== 'object') && (field.is !== 'array')) {
+    const field = fields[fieldName];
+    const def = field.def;
+
+    if (def.is && (def.is !== 'object') && (def.is !== 'array')) {
       const fieldType = createGraphQLFieldConfig(
         field, map, fieldName, '', true
       );
@@ -289,10 +290,10 @@ export function createArguments(
         argMap[fieldName] = {
           type: new GraphQLList(fieldType.type)
         };
-      };
+      }
     }
 
-    if (field.link || (field.is === 'array' && field.of && field.of.link)) {
+    if (def.link || (def.is === 'array' && def.of && def.of.link)) {
       argMap[fieldName] = {
         type: new GraphQLList(GraphQLID)
       };
@@ -307,7 +308,7 @@ export function createArguments(
  * Create a function which maps graphql arguments to a mongo query
  */
 export function createArgumentParser(
-  fields: Tyr.TyranidFieldsObject
+  fields: {[key: string]: Tyr.FieldInstance }
 ): (parent: any, args: any) => any {
   return function (
     parent: any,
@@ -318,7 +319,7 @@ export function createArgumentParser(
     const query: any = {};
     for (const prop in args) {
       // TODO: fix typings on tyranid
-      const field = (fields[prop] as any).def as Tyr.TyranidFieldDefinition;
+      const field = (fields[prop] as any).def as Tyr.FieldDefinition;
       if ( field.link ||
           (field.is === 'mongoid') ||
           (field.is === 'array' && field.of && field.of.link)) {
@@ -342,7 +343,7 @@ export function createArgumentParser(
  * particular tyranid field definition object
  */
 export function createFieldThunk(
-  fields: { [key: string]: Tyr.TyranidFieldDefinition },
+  fields: { [key: string]: Tyr.FieldInstance },
   map: GraphQLOutputTypeMap,
   path = ''
 ): GraphQLFieldConfigMapThunk {
@@ -376,23 +377,15 @@ export function createFieldThunk(
  * given a field object, create an individual GraphQLType instance
  */
 export function createGraphQLFieldConfig(
-  field: Tyr.TyranidFieldDefinition | string,
+  field: Tyr.FieldInstance | string,
   map: GraphQLOutputTypeMap,
   fieldName: string,
   path: string,
   single: boolean
 ): GraphQLFieldConfig | undefined {
 
-  if (typeof field === 'string') {
-    return createGraphQLFieldConfig(
-      { is: field }, map, fieldName, path, single
-    );
-  }
-
-  // TODO: determine why this is necessary
-  if ('def' in field) {
-    field = (field as any).def as Tyr.TyranidFieldDefinition;
-  }
+  const def = typeof field === 'string' ? undefined : field.def;
+  const is = typeof field === 'string' ?  field : (def && def.is);
 
   /**
    * Wrap single type in list if desired
@@ -401,8 +394,8 @@ export function createGraphQLFieldConfig(
     single ? type : new GraphQLList(type);
 
 
-  if (field.link) {
-    const col = Tyr.byName[field.link];
+  if (def && def.link) {
+    const col = Tyr.byName[def.link];
     const linkType = collectionFieldConfig(col, map, single);
     const colFields = col.def.fields;
 
@@ -447,11 +440,11 @@ export function createGraphQLFieldConfig(
     };
   }
 
-  if (!field.is) {
+  if (!is) {
     return error(`No field.is definition for "${path}"`);
   }
 
-  switch (field.is) {
+  switch (is) {
 
     case 'string':
     case 'url':
@@ -485,6 +478,11 @@ export function createGraphQLFieldConfig(
       };
 
     case 'array': {
+      if (typeof field === 'string') {
+        warn(`Ignoring field at path "${path}" as it has no field.of property`);
+        return;
+      }
+
       if (!field.of) {
         return error(`No field.of for array field: "${path}"`);
       }
@@ -512,6 +510,11 @@ export function createGraphQLFieldConfig(
     }
 
     case 'object': {
+      if (typeof field === 'string') {
+        warn(`Ignoring field at path "${path}" as it has no field.fields property`);
+        return;
+      }
+
       const fields = field.fields;
 
       if (!fields) {
@@ -537,7 +540,7 @@ export function createGraphQLFieldConfig(
     }
 
     default: return error(
-      `Unable to map type "${field.is}" for field at path "${path}"`
+      `Unable to map type "${is}" for field at path "${path}"`
     );
   }
 

@@ -1,13 +1,14 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
 import { GraphQLResult } from 'graphql';
 
 
 export const parameters = {
   name: 'Filtering by id parameter should work',
-  fn: async (t: ContextualTestContext) => {
+  fn: async (t: TestContext) => {
 
-    const ted = await Tyr.byName['user'].findOne({ name: 'ted' });
+    const ted = await Tyr.byName['user'].findOne({ query: { name: 'ted' } });
+    if (!ted) throw new Error(`no ted`);
 
     const query = `
       query userNameQuery {

@@ -1,21 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2015",
     "module": "commonjs",
     "moduleResolution" : "node",
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitThis": true,
-    "noUnusedLocals": true,
-    "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
+    "strict": true,
     "removeComments": false,
     "noLib": false,
     "pretty": true,
-    "outDir": "./dist-es2015/",
-    "inlineSourceMap": true,
-    "forceConsistentCasingInFileNames": true,
-    "experimentalDecorators": true
+    "outDir": "./dist/",
   },
   "files": [
     "./test/index.ts",

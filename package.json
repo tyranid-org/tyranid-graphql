@@ -2,59 +2,44 @@
   "name": "tyranid-graphql",
   "version": "0.0.7",
   "description": "GraphQL plugin for tyranid",
-  "main": "dist-node4/src/index.js",
+  "main": "dist/src/index.js",
   "scripts": {
-    "start": "npm run build && node ./dist-node4/test/example/server.js",
-    "babel": "./node_modules/.bin/babel ./dist-es2015 --out-dir ./dist-node4",
-    "build": "rm -rf ./dist-es2015/ ./dist-node4/ && npm run lint && npm run tsc && npm run babel",
+    "start": "npm run build && node ./dist/test/example/server.js",
+    "build": "rm -rf ./dist/ && npm run lint && npm run tsc",
     "pretest": "npm run build",
     "prepublish": "npm run test",
-    "test": "./node_modules/.bin/nyc ./node_modules/.bin/ava",
-    "tsc": "./node_modules/typescript/bin/tsc -d",
-    "lint": "./node_modules/tslint/bin/tslint -c ./tslint.json ./{test,lib}/**/*.ts && echo '> \\033[0;32mlinter passed!\\033[0m'",
-    "coverage": "./node_modules/.bin/nyc report --reporter=text-lcov > coverage.lcov && ./node_modules/.bin/codecov"
+    "test": "ava",
+    "tsc": "tsc -d",
+    "lint": "tslint -c ./tslint.json ./{test,lib}/**/*.ts && echo '> \\033[0;32mlinter passed!\\033[0m'"
   },
   "author": "bsouthga@gmail.com",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/body-parser": "0.0.32",
-    "@types/express": "^4.0.32",
-    "@types/hapi": "^13.0.34",
-    "@types/koa": "^2.0.32",
-    "@types/mongodb": "^2.1.32",
-    "apollo-server": "^0.2.8",
-    "ava": "^0.16.0",
-    "babel-cli": "^6.14.0",
-    "babel-core": "^6.14.0",
-    "babel-preset-es2015-node4": "^2.1.0",
-    "body-parser": "^1.15.2",
-    "codecov": "^1.0.1",
-    "express": "^4.14.0",
-    "graphql-tools": "^0.7.2",
-    "mongodb": "^2.2.10",
-    "nyc": "^8.3.0",
-    "tslint": "^3.15.1",
-    "typed-graphql": "^1.0.1",
-    "typescript": "^2.0.2",
-    "tyranid": "^0.1.7"
+    "@types/body-parser": "1.16.8",
+    "@types/express": "^4.11.0",
+    "@types/mongodb": "2.2.7",
+    "apollo-server": "^0.3.3",
+    "ava": "^0.25.0",
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "graphql-tools": "^2.19.0",
+    "mongodb": "^2.2.33",
+    "tslint": "^5.9.1",
+    "typed-graphql": "^1.0.2",
+    "typescript": "^2.6.2",
+    "tyranid": "^0.4.39"
   },
   "dependencies": {
     "graphql": "^0.7.0"
   },
-  "babel": {
-    "presets": [
-      "es2015-node4"
-    ],
-    "sourceMaps": "inline"
-  },
   "ava": {
     "files": [
-      "dist-node4/test/index.js"
+      "dist/test/index.js"
     ]
   },
   "nyc": {
     "include": [
-      "dist-node4/src"
+      "dist/src"
     ]
   }
 }

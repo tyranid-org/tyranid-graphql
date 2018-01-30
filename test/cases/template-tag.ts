@@ -1,10 +1,10 @@
-import { ContextualTestContext } from 'ava';
+import { TestContext } from 'ava';
 import { Tyr } from 'tyranid';
 import { GraphQLResult } from 'graphql';
 
 export const templateTag = {
   name: 'Template tag syntax with computed properties should work',
-  fn: async (t: ContextualTestContext) => {
+  fn: async (t: TestContext) => {
 
     const orgId = 'organizationId';
     const gql = Tyr.graphql;

@@ -183,7 +183,6 @@ export function collectionFieldConfig(
 
       if (isEnum) {
         if (!(args && args['_id'])) {
-          console.log(col.def.values);
           const ids = (col.def.values || []).map((row: any) => row['_id']);
           args = { _id: ids };
         }
@@ -395,7 +394,11 @@ export function createGraphQLFieldConfig(
 
 
   if (def && def.link) {
-    const col = Tyr.byName[def.link];
+    const link = def.link.replace(/\?$/g, '');
+    const col = Tyr.byName[link];
+
+    if (!col) throw new Error(`No collection found for link type = ${link}`);
+
     const linkType = collectionFieldConfig(col, map, single);
     const colFields = col.def.fields;
 

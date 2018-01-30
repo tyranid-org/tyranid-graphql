@@ -6,6 +6,7 @@
     "strict": true,
     "removeComments": false,
     "noLib": false,
+    "skipLibCheck": true,
     "pretty": true,
     "outDir": "./dist/",
   },

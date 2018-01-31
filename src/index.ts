@@ -538,7 +538,7 @@ export function createGraphQLFieldConfig(
       }
 
       const type = new GraphQLObjectType({
-        name: extendPath(path, fieldName),
+        name: path,
         fields: defFields,
         description: note
       });
